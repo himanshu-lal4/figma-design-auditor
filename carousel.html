@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0e0e0e; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; padding: 20px;
+  }
+
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: #1a1a1a; border-bottom: 1px solid #333;
+    display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;
+  }
+  .nav button {
+    padding: 8px 20px; border-radius: 8px; border: 1px solid #444; background: #222;
+    color: #ccc; font-size: 13px; cursor: pointer; font-weight: 500;
+  }
+  .nav button:hover { background: #333; }
+  .nav button.active { background: #a81b1b; border-color: #c42020; color: #fff; }
+  .nav .counter { color: #666; font-size: 12px; margin-left: 12px; }
+
+  .slide {
+    width: 1920px; height: 960px; display: none; position: relative;
+    margin-top: 60px; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  }
+  .slide.active { display: flex; }
+
+  .figma-bg { width: 100%; height: 100%; display: flex; background: #2c2c2c; }
+  .figma-canvas {
+    flex: 1; background: #1e1e1e; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .figma-canvas-label {
+    color: rgba(255,255,255,0.08); font-size: 72px; font-weight: 800;
+    letter-spacing: -2px; text-align: center; line-height: 1.2;
+  }
+  .figma-panel {
+    width: 560px; background: #2c2c2c; border-left: 1px solid #444;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .plugin-chrome {
+    display: flex; align-items: center; padding: 8px 12px;
+    border-bottom: 1px solid #444; background: #333;
+  }
+  .plugin-chrome .icon { width: 20px; height: 20px; border-radius: 4px; margin-right: 8px; }
+  .plugin-chrome .name { color: #ddd; font-size: 13px; font-weight: 600; flex: 1; }
+  .plugin-chrome .close { color: #888; font-size: 18px; cursor: pointer; }
+
+  .plugin-tabs {
+    display: flex; border-bottom: 1px solid #444; background: #2c2c2c;
+  }
+  .ptab {
+    flex: 1; padding: 8px 2px; text-align: center; font-size: 10px; font-weight: 500;
+    color: #888; border-bottom: 2px solid transparent;
+  }
+  .ptab.active { color: #4dabf7; border-bottom-color: #4dabf7; }
+
+  .plugin-body {
+    flex: 1; padding: 12px; overflow-y: auto; color: #ccc; font-size: 12px;
+    background: #2c2c2c;
+  }
+
+  .score-box {
+    display: flex; align-items: center; gap: 14px; padding: 14px;
+    background: #363636; border-radius: 10px; margin-bottom: 12px;
+  }
+  .score-ring-mock {
+    width: 64px; height: 64px; border-radius: 50%; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .score-ring-mock .val { font-size: 20px; font-weight: 800; }
+  .score-meta .grade { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .score-meta .detail { font-size: 11px; color: #888; }
+
+  .stat-grid-mock {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;
+  }
+  .stat-mock {
+    background: #363636; border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .stat-mock .num { font-size: 20px; font-weight: 800; }
+  .stat-mock .num.warn { color: #f24822; }
+  .stat-mock .num.ok { color: #14ae5c; }
+  .stat-mock .lbl { font-size: 9px; color: #888; margin-top: 2px; }
+
+  .cat-section {
+    border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+  }
+  .cat-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #363636;
+  }
+  .cat-icon {
+    font-size: 9px; font-weight: 800; width: 26px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ci-red { background: rgba(242,72,34,0.2); color: #f24822; }
+  .ci-orange { background: rgba(245,166,35,0.2); color: #f5a623; }
+  .ci-green { background: rgba(20,174,92,0.2); color: #14ae5c; }
+  .cat-label { font-weight: 600; font-size: 11px; flex: 1; }
+  .cat-count { font-weight: 700; font-size: 11px; }
+  .cat-body-item {
+    display: flex; align-items: center; gap: 8px; padding: 5px 10px;
+    border-top: 1px solid #3a3a3a; font-size: 10px;
+  }
+  .cbi-name { font-weight: 600; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cbi-msg { color: #888; font-size: 9px; flex: 1; }
+  .cbi-sug { color: #14ae5c; font-size: 9px; }
+
+  .item-list-mock {
+    border: 1px solid #444; border-radius: 6px; margin: 8px 0; overflow: hidden;
+  }
+  .item-mock {
+    display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    border-bottom: 1px solid #3a3a3a; font-size: 10px;
+  }
+  .item-mock:last-child { border-bottom: none; }
+  .item-mock .cb { width: 12px; height: 12px; border: 1px solid #666; border-radius: 2px; background: #4dabf7; flex-shrink: 0; }
+  .item-mock .old { color: #f24822; font-weight: 500; }
+  .item-mock .arrow { color: #666; }
+  .item-mock .new { color: #14ae5c; }
+  .item-mock .path { color: #666; font-size: 9px; margin-left: auto; }
+  .item-mock .dir-tag { font-size: 8px; padding: 1px 4px; border-radius: 2px; font-weight: 600; }
+  .dir-h { background: rgba(77,171,247,0.2); color: #4dabf7; }
+  .dir-v { background: rgba(20,174,92,0.2); color: #14ae5c; }
+
+  .btn-mock {
+    display: inline-block; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  }
+  .btn-blue { background: #4dabf7; color: #fff; }
+  .btn-gray { background: #444; color: #ccc; }
+  .btn-green { background: #14ae5c; color: #fff; }
+  .btn-row-mock { display: flex; gap: 8px; margin: 8px 0; }
+
+  .section-hdr { font-weight: 700; font-size: 13px; margin: 10px 0 4px; color: #eee; }
+  .section-desc { font-size: 10px; color: #888; margin-bottom: 8px; }
+
+  .mcp-section-mock {
+    border: 1px solid #444; border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+  }
+  .mcp-sh {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    background: #363636; font-weight: 600; font-size: 11px;
+  }
+  .mcp-sh .badge { font-size: 9px; padding: 1px 6px; border-radius: 8px; background: #4dabf7; color: #fff; margin-left: auto; }
+  .mcp-sb { padding: 8px 10px; }
+
+  .intent-row-mock {
+    display: flex; align-items: center; gap: 6px; padding: 5px 0;
+    border-bottom: 1px solid #3a3a3a; font-size: 10px;
+  }
+  .intent-row-mock:last-child { border-bottom: none; }
+  .conf-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .type-badge-mock { font-size: 8px; padding: 1px 4px; border-radius: 3px; color: #fff; flex-shrink: 0; font-weight: 600; }
+  .intent-name-mock { font-weight: 500; flex: 1; }
+  .intent-arrow-mock { color: #666; font-size: 11px; }
+  .intent-select-mock {
+    padding: 2px 6px; border: 1px solid #555; border-radius: 4px;
+    font-size: 9px; background: #363636; color: #14ae5c;
+  }
+
+  .fw-selector-mock { display: flex; border: 1px solid #555; border-radius: 6px; overflow: hidden; margin: 6px 0; }
+  .fw-opt { flex: 1; padding: 5px 8px; font-size: 10px; font-weight: 500; text-align: center; color: #888; background: #2c2c2c; }
+  .fw-opt:not(:last-child) { border-right: 1px solid #555; }
+  .fw-opt.active { background: #4dabf7; color: #fff; }
+
+  .slide-label {
+    position: absolute; bottom: 20px; left: 20px;
+    background: rgba(0,0,0,0.8); color: #fff; padding: 8px 20px;
+    border-radius: 8px; font-size: 16px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.1); z-index: 10;
+    letter-spacing: 0.5px;
+  }
+  .slide-label span { color: #a81b1b; }
+</style>
+</head>
+<body>
+
+<div class="nav" id="nav"></div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 1: AI Ready — Score & Audit -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="figma-bg">
+    <div class="figma-canvas"><div class="figma-canvas-label">AI Ready<br>Score</div></div>
+    <div class="figma-panel">
+      <div class="plugin-chrome">
+        <img class="icon" src="icon.png"><span class="name">Design System Auditor</span><span class="close">&times;</span>
+      </div>
+      <div class="plugin-tabs">
+        <div class="ptab active">AI Ready</div><div class="ptab">Audit</div><div class="ptab">Fix</div><div class="ptab">Cleanup</div>
+      </div>
+      <div class="plugin-body">
+        <div class="section-hdr">AI Ready Score</div>
+        <div class="section-desc">Scores how well AI tools can translate your design into code.</div>
+        <div class="btn-row-mock"><div class="btn-mock btn-blue">Audit Page</div><div class="btn-mock btn-gray">Audit Selection</div></div>
+        <div class="score-box">
+          <div class="score-ring-mock" style="border: 4px solid #333; border-top-color: #f5a623; border-right-color: #f5a623; border-bottom-color: #f5a623;">
+            <span class="val" style="color:#f5a623;">68</span>
+          </div>
+          <div class="score-meta">
+            <div class="grade" style="color:#f5a623;">Needs Work</div>
+            <div class="detail">142 issues across 6 categories</div>
+          </div>
+        </div>
+        <div class="stat-grid-mock">
+          <div class="stat-mock"><div class="num warn">48</div><div class="lbl">Naming</div></div>
+          <div class="stat-mock"><div class="num warn">32</div><div class="lbl">Token Binding</div></div>
+          <div class="stat-mock"><div class="num warn">18</div><div class="lbl">Auto Layout</div></div>
+          <div class="stat-mock"><div class="num warn">24</div><div class="lbl">Structure</div></div>
+          <div class="stat-mock"><div class="num warn">12</div><div class="lbl">Spacing</div></div>
+          <div class="stat-mock"><div class="num warn">8</div><div class="lbl">Readability</div></div>
+        </div>
+        <div class="cat-section">
+          <div class="cat-header"><span class="cat-icon ci-red">Aa</span><span class="cat-label">Layer Naming (28%)</span><span class="cat-count" style="color:#f24822;">48</span></div>
+          <div class="cat-body-item"><span class="cbi-name">Frame 12</span><span class="cbi-msg">Unnamed layer — generic name</span><span class="cbi-sug">&rarr; Login/EmailInput</span></div>
+          <div class="cat-body-item"><span class="cbi-name">Rectangle 4</span><span class="cbi-msg">Unnamed layer — generic name</span><span class="cbi-sug">&rarr; CardBackground</span></div>
+        </div>
+        <div class="cat-section">
+          <div class="cat-header"><span class="cat-icon ci-orange">{}</span><span class="cat-label">Token Binding</span><span class="cat-count" style="color:#f5a623;">32</span></div>
+          <div class="cat-body-item"><span class="cbi-name">Header</span><span class="cbi-msg">Fill not bound to variable or style</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-label"><span>1/5</span> &mdash; AI Ready Score — 6 Quality Dimensions</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 2: Prompt Generator & Component Mapping -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="figma-bg">
+    <div class="figma-canvas"><div class="figma-canvas-label">Prompt<br>Generator</div></div>
+    <div class="figma-panel">
+      <div class="plugin-chrome">
+        <img class="icon" src="icon.png"><span class="name">Design System Auditor</span><span class="close">&times;</span>
+      </div>
+      <div class="plugin-tabs">
+        <div class="ptab active">AI Ready</div><div class="ptab">Audit</div><div class="ptab">Fix</div><div class="ptab">Cleanup</div>
+      </div>
+      <div class="plugin-body">
+        <div class="mcp-section-mock">
+          <div class="mcp-sh"><span>Prompt Generator</span></div>
+          <div class="mcp-sb">
+            <div class="section-desc" style="margin:4px 0 6px;">Generate an AI-ready code prompt from your design.</div>
+            <div class="fw-selector-mock">
+              <div class="fw-opt active">Expo</div>
+              <div class="fw-opt">React Native CLI</div>
+            </div>
+            <div class="btn-row-mock"><div class="btn-mock btn-blue">Generate AI Prompt</div><div class="btn-mock btn-gray">Generate from Selection</div></div>
+          </div>
+        </div>
+        <div class="mcp-section-mock">
+          <div class="mcp-sh"><span>Component Mapping</span><span class="badge">12</span></div>
+          <div class="mcp-sb">
+            <div class="section-desc" style="margin:0 0 4px;">Map Figma components to React Native equivalents.</div>
+            <div class="btn-row-mock" style="margin-bottom:6px;"><div class="btn-mock btn-blue" style="font-size:10px;padding:4px 10px;">Auto-Detect</div><div class="btn-mock btn-green" style="font-size:10px;padding:4px 10px;">Apply All</div></div>
+            <div style="display:flex;gap:8px;font-size:9px;color:#888;margin-bottom:6px;">
+              <span><span class="conf-dot" style="display:inline-block;background:#14ae5c;vertical-align:middle;"></span> 8 high</span>
+              <span><span class="conf-dot" style="display:inline-block;background:#f5a623;vertical-align:middle;"></span> 3 medium</span>
+              <span><span class="conf-dot" style="display:inline-block;background:#888;vertical-align:middle;"></span> 1 low</span>
+            </div>
+            <div style="border:1px solid #444;border-radius:6px;overflow:hidden;">
+              <div class="intent-row-mock"><span class="conf-dot" style="background:#14ae5c;"></span><span class="type-badge-mock" style="background:#0d99ff;">C</span><span class="intent-name-mock">PrimaryButton</span><span class="intent-arrow-mock">&rarr;</span><span class="intent-select-mock">TouchableOpacity</span></div>
+              <div class="intent-row-mock"><span class="conf-dot" style="background:#14ae5c;"></span><span class="type-badge-mock" style="background:#9747ff;">CS</span><span class="intent-name-mock">InputField</span><span class="intent-arrow-mock">&rarr;</span><span class="intent-select-mock">TextInput</span></div>
+              <div class="intent-row-mock"><span class="conf-dot" style="background:#f5a623;"></span><span class="type-badge-mock" style="background:#14ae5c;">I</span><span class="intent-name-mock">SearchBar</span><span class="intent-arrow-mock">&rarr;</span><span class="intent-select-mock">TextInput</span></div>
+              <div class="intent-row-mock"><span class="conf-dot" style="background:#14ae5c;"></span><span class="type-badge-mock" style="background:#0d99ff;">C</span><span class="intent-name-mock">AvatarImage</span><span class="intent-arrow-mock">&rarr;</span><span class="intent-select-mock">Image</span></div>
+              <div class="intent-row-mock"><span class="conf-dot" style="background:#14ae5c;"></span><span class="type-badge-mock" style="background:#0d99ff;">C</span><span class="intent-name-mock">BottomTabBar</span><span class="intent-arrow-mock">&rarr;</span><span class="intent-select-mock">TabView</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-label"><span>2/5</span> &mdash; Prompt Generator & Component Mapping</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 3: Fix Tab — Smart Rename & Auto Layout -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="figma-bg">
+    <div class="figma-canvas"><div class="figma-canvas-label">Smart<br>Fix</div></div>
+    <div class="figma-panel">
+      <div class="plugin-chrome">
+        <img class="icon" src="icon.png"><span class="name">Design System Auditor</span><span class="close">&times;</span>
+      </div>
+      <div class="plugin-tabs">
+        <div class="ptab">AI Ready</div><div class="ptab">Audit</div><div class="ptab active">Fix</div><div class="ptab">Cleanup</div>
+      </div>
+      <div class="plugin-body">
+        <div class="section-hdr">Smart Rename</div>
+        <div class="section-desc">Detect unnamed layers and get context-aware name suggestions. Click any name to select in Figma.</div>
+        <div class="btn-row-mock"><div class="btn-mock btn-blue">Scan Unnamed Layers</div></div>
+        <div style="font-weight:600;margin:8px 0;">24 unnamed layers found</div>
+        <div class="item-list-mock">
+          <div class="item-mock"><span class="cb"></span><span class="old">Frame 12</span><span class="arrow">&rarr;</span><span class="new">Login / Email Input</span><span class="path">Screen / Login</span></div>
+          <div class="item-mock"><span class="cb"></span><span class="old">Rectangle 4</span><span class="arrow">&rarr;</span><span class="new">Card Background</span><span class="path">Card / Header</span></div>
+          <div class="item-mock"><span class="cb"></span><span class="old">Group 7</span><span class="arrow">&rarr;</span><span class="new">Icon Container</span><span class="path">Nav / Bottom</span></div>
+        </div>
+        <div class="btn-row-mock"><div class="btn-mock btn-blue">Apply Selected</div><div class="btn-mock btn-gray">Select All in Figma</div></div>
+        <hr style="border:none;border-top:1px solid #444;margin:12px 0;">
+        <div class="section-hdr">Auto Layout Check</div>
+        <div class="section-desc">Find frames without Auto Layout.</div>
+        <div style="font-weight:600;margin:6px 0;font-size:11px;">5 frames without Auto Layout</div>
+        <div class="item-list-mock">
+          <div class="item-mock"><span class="cb"></span><span class="dir-tag dir-v">V</span><span style="font-weight:500;">Dose Info Card</span><span style="color:#666;font-size:9px;">(4)</span><span class="path">Home</span></div>
+          <div class="item-mock"><span class="cb"></span><span class="dir-tag dir-h">H</span><span style="font-weight:500;">Navigation Row</span><span style="color:#666;font-size:9px;">(5)</span><span class="path">Home</span></div>
+        </div>
+        <div class="btn-row-mock"><div class="btn-mock btn-blue">Apply to Selected</div><div class="btn-mock" style="background:#f24822;color:#fff;">Apply to All</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-label"><span>3/5</span> &mdash; Smart Rename, Find & Replace, Auto Layout</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 4: Audit Tab — Design System Health -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="figma-bg">
+    <div class="figma-canvas"><div class="figma-canvas-label">Design<br>System</div></div>
+    <div class="figma-panel">
+      <div class="plugin-chrome">
+        <img class="icon" src="icon.png"><span class="name">Design System Auditor</span><span class="close">&times;</span>
+      </div>
+      <div class="plugin-tabs">
+        <div class="ptab">AI Ready</div><div class="ptab active">Audit</div><div class="ptab">Fix</div><div class="ptab">Cleanup</div>
+      </div>
+      <div class="plugin-body">
+        <div class="section-hdr">Design System Health Check</div>
+        <div class="section-desc">Run a comprehensive audit across 7 quality dimensions.</div>
+        <div class="btn-row-mock"><div class="btn-mock btn-blue">Run Full Audit</div><div class="btn-mock btn-gray">Export Report</div></div>
+        <div class="score-box">
+          <div class="score-ring-mock" style="border: 4px solid #333; border-top-color: #f5a623; border-right-color: #f5a623; border-bottom-color: #f5a623;">
+            <span class="val" style="color:#f5a623;">62</span>
+          </div>
+          <div class="score-meta">
+            <div class="grade" style="color:#f5a623;">Needs Work</div>
+            <div class="detail">1,247 nodes scanned, 38 components, 80 issues</div>
+          </div>
+        </div>
+        <div class="stat-grid-mock">
+          <div class="stat-mock"><div class="num warn">60</div><div class="lbl">Unnamed Layers</div></div>
+          <div class="stat-mock"><div class="num warn">5</div><div class="lbl">No Auto Layout</div></div>
+          <div class="stat-mock"><div class="num warn">9</div><div class="lbl">Generic Props</div></div>
+          <div class="stat-mock"><div class="num warn">6</div><div class="lbl">No Description</div></div>
+          <div class="stat-mock"><div class="num ok">0</div><div class="lbl">Bad Booleans</div></div>
+          <div class="stat-mock"><div class="num ok">0</div><div class="lbl">Missing States</div></div>
+        </div>
+        <div style="font-size:9px;color:#666;">Click any stat card to select those nodes in Figma.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-label"><span>4/5</span> &mdash; Design System Audit with 0-100 Score</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 5: AI Workflow Overview -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a1a,#0d0d0d);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px;"></div>
+    <div style="position:relative;z-index:1;text-align:center;">
+      <div style="font-size:18px;color:#888;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;">AI-First Design Workflow</div>
+      <div style="display:flex;gap:24px;align-items:center;justify-content:center;margin-bottom:50px;">
+        <div style="background:#363636;border-radius:16px;padding:24px 32px;text-align:center;border:1px solid #444;">
+          <div style="font-size:40px;margin-bottom:8px;">&#127912;</div>
+          <div style="color:#fff;font-size:20px;font-weight:700;">Design in Figma</div>
+          <div style="color:#888;font-size:13px;margin-top:4px;">Create your UI</div>
+        </div>
+        <div style="color:#a81b1b;font-size:36px;font-weight:800;">&rarr;</div>
+        <div style="background:rgba(168,27,27,0.15);border-radius:16px;padding:24px 32px;text-align:center;border:2px solid #a81b1b;box-shadow:0 0 40px rgba(168,27,27,0.2);">
+          <img src="icon.png" style="width:40px;height:40px;border-radius:8px;margin-bottom:8px;">
+          <div style="color:#fff;font-size:20px;font-weight:700;">Run Auditor</div>
+          <div style="color:#f5a623;font-size:13px;margin-top:4px;">Score &amp; generate prompt</div>
+        </div>
+        <div style="color:#a81b1b;font-size:36px;font-weight:800;">&rarr;</div>
+        <div style="background:#363636;border-radius:16px;padding:24px 32px;text-align:center;border:1px solid #444;">
+          <div style="font-size:40px;margin-bottom:8px;">&#129302;</div>
+          <div style="color:#fff;font-size:20px;font-weight:700;">AI Generates Code</div>
+          <div style="color:#888;font-size:13px;margin-top:4px;">Clean structure = better code</div>
+        </div>
+        <div style="color:#14ae5c;font-size:36px;font-weight:800;">&rarr;</div>
+        <div style="background:#363636;border-radius:16px;padding:24px 32px;text-align:center;border:1px solid #444;">
+          <div style="font-size:40px;margin-bottom:8px;">&#128241;</div>
+          <div style="color:#fff;font-size:20px;font-weight:700;">React Native App</div>
+          <div style="color:#14ae5c;font-size:13px;margin-top:4px;">iOS + Android ready</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:40px;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:48px;font-weight:800;color:#a81b1b;">4</div>
+          <div style="color:#888;font-size:14px;">Tabs</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:48px;font-weight:800;color:#4dabf7;">6</div>
+          <div style="color:#888;font-size:14px;">AI Quality Dimensions</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:48px;font-weight:800;color:#14ae5c;">2</div>
+          <div style="color:#888;font-size:14px;">Frameworks</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:48px;font-weight:800;color:#f5a623;">1-Click</div>
+          <div style="color:#888;font-size:14px;">Prompt Generation</div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#a81b1b,#e63946,#a81b1b);"></div>
+  </div>
+  <div class="slide-label"><span>5/5</span> &mdash; Design &rarr; Audit &rarr; AI &rarr; React Native</div>
+</div>
+
+<script>
+  var slides = document.querySelectorAll('.slide');
+  var nav = document.getElementById('nav');
+  var current = 0;
+
+  var labels = [
+    '1. AI Ready Score',
+    '2. Prompt & Mapping',
+    '3. Fix Tab',
+    '4. Design Audit',
+    '5. AI Workflow'
+  ];
+
+  function render() {
+    nav.innerHTML = '';
+    for (var i = 0; i < slides.length; i++) {
+      slides[i].classList.toggle('active', i === current);
+      var btn = document.createElement('button');
+      btn.textContent = labels[i];
+      btn.className = i === current ? 'active' : '';
+      btn.dataset.idx = i;
+      btn.onclick = function() { current = parseInt(this.dataset.idx); render(); };
+      nav.appendChild(btn);
+    }
+    var counter = document.createElement('span');
+    counter.className = 'counter';
+    counter.textContent = (current + 1) + ' / ' + slides.length;
+    nav.appendChild(counter);
+  }
+  render();
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { current = (current + 1) % slides.length; render(); }
+    if (e.key === 'ArrowLeft') { current = (current - 1 + slides.length) % slides.length; render(); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+  .cover {
+    width: 1920px; height: 960px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(168,27,27,0.25) 0%, transparent 70%);
+    left: 180px; top: 50%; transform: translateY(-50%);
+  }
+
+  .left {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 500px; flex-shrink: 0; position: relative; z-index: 1;
+  }
+
+  .logo {
+    width: 180px; height: 180px; border-radius: 32px;
+    box-shadow: 0 20px 60px rgba(168,27,27,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+
+  .plugin-name {
+    color: #fff; font-size: 32px; font-weight: 800; margin-top: 28px;
+    text-align: center; letter-spacing: -0.5px;
+  }
+
+  .plugin-sub {
+    color: rgba(255,255,255,0.5); font-size: 16px; font-weight: 400; margin-top: 8px;
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  .divider-line {
+    position: absolute;
+    left: 540px; top: 80px; bottom: 80px;
+    width: 1px;
+    background: linear-gradient(transparent, rgba(255,255,255,0.1), transparent);
+  }
+
+  .right {
+    flex: 1; padding: 60px 80px 60px 100px; position: relative; z-index: 1;
+  }
+
+  .tabs-preview {
+    display: flex; gap: 12px; margin-bottom: 40px;
+  }
+  .tab-pill {
+    padding: 8px 20px; border-radius: 20px; font-size: 15px; font-weight: 600;
+    color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .tab-pill.active {
+    color: #fff; background: #a81b1b;
+    border-color: #c42020;
+    box-shadow: 0 4px 20px rgba(168,27,27,0.4);
+  }
+
+  .features {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px 40px;
+  }
+
+  .feature {
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .feature-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; flex-shrink: 0;
+    color: #fff;
+  }
+  .fi-red { background: rgba(168,27,27,0.3); border: 1px solid rgba(168,27,27,0.5); }
+  .fi-blue { background: rgba(13,153,255,0.15); border: 1px solid rgba(13,153,255,0.3); }
+  .fi-green { background: rgba(20,174,92,0.15); border: 1px solid rgba(20,174,92,0.3); }
+  .fi-orange { background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.3); }
+  .fi-purple { background: rgba(149,97,226,0.15); border: 1px solid rgba(149,97,226,0.3); }
+  .fi-cyan { background: rgba(0,200,200,0.15); border: 1px solid rgba(0,200,200,0.3); }
+
+  .feature-text h3 {
+    color: #fff; font-size: 17px; font-weight: 700; margin-bottom: 3px;
+  }
+  .feature-text p {
+    color: rgba(255,255,255,0.45); font-size: 13px; line-height: 1.4;
+  }
+
+  .bottom-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #a81b1b, #e63946, #a81b1b);
+  }
+
+  .badge {
+    position: absolute; top: 40px; right: 60px;
+    color: rgba(255,255,255,0.3); font-size: 13px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="glow"></div>
+  <div class="divider-line"></div>
+
+  <div class="left">
+    <img class="logo" src="icon.png" alt="Logo">
+    <div class="plugin-name">Design System Auditor</div>
+    <div class="plugin-sub">Figma Plugin</div>
+  </div>
+
+  <div class="right">
+    <div class="tabs-preview">
+      <div class="tab-pill active">AI Ready</div>
+      <div class="tab-pill">Audit</div>
+      <div class="tab-pill">Fix</div>
+      <div class="tab-pill">Cleanup</div>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon fi-red">AI</div>
+        <div class="feature-text">
+          <h3>AI Ready Score</h3>
+          <p>Score 0-100 across 6 quality dimensions — naming, tokens, layout, structure, spacing, readability</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon fi-purple">{ }</div>
+        <div class="feature-text">
+          <h3>Prompt Generator</h3>
+          <p>Generate AI code prompts with design tokens, layer tree, and navigation architecture</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon fi-blue">Aa</div>
+        <div class="feature-text">
+          <h3>Smart Rename & Fix</h3>
+          <p>Context-aware naming, find & replace, auto descriptions, auto layout detection</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon fi-green">RN</div>
+        <div class="feature-text">
+          <h3>Component Mapping</h3>
+          <p>Auto-detect and map Figma components to React Native equivalents</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon fi-orange">7+</div>
+        <div class="feature-text">
+          <h3>Design System Audit</h3>
+          <p>Score across 7 quality dimensions with exportable markdown reports</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon fi-cyan">QA</div>
+        <div class="feature-text">
+          <h3>Design Cleanup</h3>
+          <p>Find detached instances, unused styles, layer issues, and accessibility problems</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar"></div>
+  <div class="badge">AI-First Design Workflow</div>
+</div>
+</body>
+</html>

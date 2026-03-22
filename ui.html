@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12px;
+    color: var(--figma-color-text, #333);
+    background: var(--figma-color-bg, #fff);
+    overflow-x: hidden;
+  }
+
+  /* ─── Tabs ─── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--figma-color-border, #e5e5e5);
+    position: sticky;
+    top: 0;
+    background: var(--figma-color-bg, #fff);
+    z-index: 10;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--figma-color-text-secondary, #999);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .tab:hover { color: var(--figma-color-text, #333); background: var(--figma-color-bg-hover, #f5f5f5); }
+  .tab.active { color: var(--figma-color-text-brand, #0d99ff); border-bottom-color: var(--figma-color-text-brand, #0d99ff); }
+
+  /* ─── Panels ─── */
+  .panel { display: none; padding: 12px; }
+  .panel.active { display: block; }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--figma-color-bg-brand, #0d99ff); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: var(--figma-color-bg-secondary, #f0f0f0); color: var(--figma-color-text, #333); }
+  .btn-secondary:hover { background: var(--figma-color-bg-tertiary, #e5e5e5); }
+  .btn-danger { background: #f24822; color: #fff; }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-success { background: #14ae5c; color: #fff; }
+  .btn-success:hover { opacity: 0.9; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-sm { padding: 4px 8px; font-size: 10px; }
+  .btn-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+
+  /* ─── Score Ring ─── */
+  .score-container {
+    display: flex; align-items: center; gap: 16px; margin: 12px 0;
+    padding: 16px; background: var(--figma-color-bg-secondary, #f7f7f7);
+    border-radius: 12px;
+  }
+  .score-ring {
+    width: 72px; height: 72px; position: relative; flex-shrink: 0;
+  }
+  .score-ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+  .score-ring .bg { fill: none; stroke: var(--figma-color-border, #e5e5e5); stroke-width: 6; }
+  .score-ring .fg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.3s; }
+  .score-value {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 20px; font-weight: 700;
+  }
+  .score-meta { flex: 1; }
+  .score-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .score-detail { font-size: 11px; color: var(--figma-color-text-secondary, #999); line-height: 1.4; }
+  .grade-a { color: #14ae5c; }
+  .grade-b { color: #0d99ff; }
+  .grade-c { color: #f5a623; }
+  .grade-d { color: #f24822; }
+
+  /* ─── Stat Grid ─── */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+  .stat-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .stat-card {
+    background: var(--figma-color-bg-secondary, #f7f7f7); border-radius: 8px;
+    padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.15s;
+  }
+  .stat-card:hover { background: var(--figma-color-bg-tertiary, #eee); }
+  .stat-card .count { font-size: 20px; font-weight: 700; }
+  .stat-card .count.warn { color: #f24822; }
+  .stat-card .count.ok { color: #14ae5c; }
+  .stat-card .label { font-size: 10px; color: var(--figma-color-text-secondary, #999); margin-top: 2px; line-height: 1.3; }
+  .mcp-card-deduction { font-size: 9px; color: var(--figma-color-text-tertiary, #aaa); margin-top: 2px; font-weight: 500; }
+
+  /* ─── Item List ─── */
+  .item-list {
+    max-height: 240px; overflow-y: auto;
+    border: 1px solid var(--figma-color-border, #e5e5e5); border-radius: 6px; margin: 8px 0;
+  }
+  .item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-bottom: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px;
+  }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: var(--figma-color-bg-hover, #f5f5f5); }
+  .item input[type="checkbox"] { flex-shrink: 0; }
+  .item .node-name { font-weight: 500; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .clickable-name { cursor: pointer; }
+  .clickable-name:hover { color: var(--figma-color-text-brand, #0d99ff); }
+  .item .node-path { color: var(--figma-color-text-secondary, #999); font-size: 10px; flex-shrink: 0; margin-left: auto; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item input[type="text"] {
+    border: 1px solid var(--figma-color-border, #ddd); border-radius: 4px; padding: 3px 6px;
+    font-size: 11px; flex: 1; min-width: 0; background: var(--figma-color-bg, #fff); color: var(--figma-color-text, #333);
+  }
+  .item .arrow { color: var(--figma-color-text-secondary, #999); flex-shrink: 0; }
+  .item .tag {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
+    background: var(--figma-color-bg-tertiary, #e5e5e5); color: var(--figma-color-text-secondary, #666);
+  }
+  .item .tag.h { background: #e8f4fd; color: #0d99ff; }
+  .item .tag.v { background: #e8fdf0; color: #14ae5c; }
+
+  /* ─── Find/Replace ─── */
+  .find-replace-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+  .find-replace-row input {
+    flex: 1; padding: 6px 8px; border: 1px solid var(--figma-color-border, #ddd);
+    border-radius: 6px; font-size: 11px; background: var(--figma-color-bg, #fff); color: var(--figma-color-text, #333);
+  }
+
+
+
+
+  /* ─── Settings Row ─── */
+  .settings-row { display: flex; gap: 12px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+  .setting-group { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+  .setting-group label { color: var(--figma-color-text-secondary, #999); font-weight: 500; }
+  .setting-group select, .setting-group input[type="number"] {
+    padding: 4px 6px; border: 1px solid var(--figma-color-border, #ddd);
+    border-radius: 4px; font-size: 11px; width: 60px; background: var(--figma-color-bg, #fff); color: var(--figma-color-text, #333);
+  }
+  .setting-group select { width: 90px; }
+
+  /* ─── Section Headers ─── */
+  .section-header { font-weight: 600; font-size: 13px; margin: 14px 0 4px; }
+  .section-header:first-child { margin-top: 0; }
+  .section-desc { color: var(--figma-color-text-secondary, #999); font-size: 11px; margin-bottom: 8px; line-height: 1.4; }
+  .divider { border: none; border-top: 1px solid var(--figma-color-border, #e5e5e5); margin: 14px 0; }
+
+  /* ─── Status ─── */
+  .status-bar { padding: 8px 12px; font-size: 11px; color: var(--figma-color-text-secondary, #999); text-align: center; display: none; }
+  .status-bar.visible { display: block; }
+  .status-bar.success { color: #14ae5c; }
+  .status-bar.error { color: #f24822; }
+  .empty-state { text-align: center; padding: 20px; color: var(--figma-color-text-secondary, #999); }
+  .empty-state .big { font-size: 28px; margin-bottom: 6px; }
+
+
+
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--figma-color-border, #ddd);
+    border-top-color: var(--figma-color-text-brand, #0d99ff);
+    border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .select-all-row {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+    background: var(--figma-color-bg-secondary, #f7f7f7);
+    border-bottom: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px; font-weight: 500;
+  }
+
+  /* ─── Desc Generator ─── */
+  .desc-item {
+    padding: 8px 10px; border-bottom: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px;
+  }
+  .desc-item:last-child { border-bottom: none; }
+  .desc-item .comp-name { font-weight: 600; margin-bottom: 2px; }
+  .desc-item textarea {
+    width: 100%; min-height: 36px; padding: 4px 6px; border: 1px solid var(--figma-color-border, #ddd);
+    border-radius: 4px; font-size: 11px; resize: vertical; font-family: inherit;
+    background: var(--figma-color-bg, #fff); color: var(--figma-color-text, #333);
+  }
+
+
+  /* ─── MCP Ready ─── */
+  .mcp-category {
+    border: 1px solid var(--figma-color-border, #e5e5e5);
+    border-radius: 8px; margin: 8px 0; overflow: hidden;
+  }
+  .mcp-category-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: var(--figma-color-bg-secondary, #f7f7f7); cursor: pointer; user-select: none;
+  }
+  .mcp-category-header:hover { background: var(--figma-color-bg-tertiary, #eee); }
+  .mcp-cat-icon {
+    font-size: 10px; font-weight: 700; width: 28px; height: 20px;
+    display: flex; align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0;
+  }
+  .mcp-cat-label { font-weight: 600; font-size: 12px; flex: 1; }
+  .mcp-cat-count { font-weight: 700; font-size: 12px; }
+  .mcp-select-all { font-size: 13px; cursor: pointer; color: var(--figma-color-text-secondary, #999); padding: 0 2px; }
+  .mcp-select-all:hover { color: var(--figma-color-text, #333); }
+  .mcp-cat-chevron { font-size: 10px; color: var(--figma-color-text-secondary, #999); }
+  .severity-critical { color: #f24822; background: #fde8e8; }
+  .severity-warning { color: #f5a623; background: #fef9ed; }
+  .severity-pass { color: #14ae5c; background: #e8fdf0; }
+  .mcp-category-body { max-height: 200px; overflow-y: auto; }
+  .mcp-issue {
+    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+    border-top: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px; cursor: pointer;
+  }
+  .mcp-issue:hover { background: var(--figma-color-bg-hover, #f5f5f5); }
+  .mcp-issue-name {
+    font-weight: 500; max-width: 120px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
+  }
+  .mcp-issue-msg {
+    color: var(--figma-color-text-secondary, #999); font-size: 10px; flex: 1;
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mcp-issue-suggestion { color: #14ae5c; font-size: 10px; flex-shrink: 0; }
+  .mcp-issue-color {
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1px solid var(--figma-color-border, #ddd); flex-shrink: 0;
+  }
+  .mcp-view-more {
+    font-style: italic; color: var(--figma-color-text-brand, #0d99ff); cursor: pointer;
+    text-align: center; padding: 6px 12px; font-size: 11px;
+    border-top: 1px solid var(--figma-color-border, #e5e5e5);
+  }
+  .mcp-view-more:hover { background: var(--figma-color-bg-hover, #f5f5f5); }
+  /* ─── Code Block (shared: AI Ready prompt) ─── */
+  .code-block {
+    position: relative; background: #1e1e1e; color: #d4d4d4;
+    border-radius: 8px; padding: 12px; margin: 8px 0; overflow-x: auto;
+    font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; line-height: 1.5;
+    max-height: 300px; overflow-y: auto;
+  }
+  .code-block pre { margin: 0; white-space: pre; }
+  .copy-btn {
+    position: absolute; top: 6px; right: 6px; padding: 3px 8px;
+    background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px;
+    font-size: 10px; cursor: pointer; z-index: 2;
+  }
+  .copy-btn:hover { background: #444; color: #fff; }
+
+  .progress-bar-container { margin: 6px 0; }
+  .progress-bar-label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+  .progress-bar { height: 8px; background: var(--figma-color-bg-tertiary, #e5e5e5); border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+  .export-section { border: 1px solid var(--figma-color-border, #e5e5e5); border-radius: 8px; margin: 8px 0; overflow: hidden; }
+  .export-section-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: var(--figma-color-bg-secondary, #f7f7f7); cursor: pointer; user-select: none;
+    font-weight: 600; font-size: 12px;
+  }
+  .export-section-header:hover { background: var(--figma-color-bg-tertiary, #eee); }
+  .export-section-badge { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: var(--figma-color-bg-brand, #0d99ff); color: #fff; margin-left: auto; }
+  .export-section-chevron { font-size: 10px; color: var(--figma-color-text-secondary, #999); }
+  .export-section-body { padding: 8px 12px; }
+
+  /* ─── Cleanup ─── */
+  .cleanup-actions { margin: 8px 0; padding: 8px; background: var(--figma-color-bg-secondary, #f7f7f7); border-radius: 8px; }
+  .cleanup-actions .section-header { font-size: 11px; margin-bottom: 6px; }
+
+  /* ─── MCP Collapsible Sections ─── */
+  .mcp-section {
+    border: 1px solid var(--figma-color-border, #e5e5e5); border-radius: 8px; margin: 8px 0; overflow: hidden;
+  }
+  .mcp-section-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: var(--figma-color-bg-secondary, #f7f7f7); cursor: pointer; user-select: none;
+    font-weight: 600; font-size: 12px;
+  }
+  .mcp-section-header:hover { background: var(--figma-color-bg-tertiary, #eee); }
+  .mcp-section-badge { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: var(--figma-color-bg-brand, #0d99ff); color: #fff; margin-left: auto; }
+  .mcp-section-chevron { font-size: 10px; color: var(--figma-color-text-secondary, #999); }
+  .mcp-section-body { padding: 8px 12px; }
+  .mcp-section-body.collapsed { display: none; }
+
+  /* ─── MCP Intent Mapping ─── */
+  .mcp-intents-scroll {
+    max-height: 280px; overflow-y: auto;
+    border: 1px solid var(--figma-color-border, #e5e5e5); border-radius: 6px;
+  }
+  .mcp-intents-scroll:empty { border: none; }
+  .intent-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-bottom: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px;
+    transition: background 0.15s;
+  }
+  .intent-row:last-child { border-bottom: none; }
+  .intent-row:hover { background: var(--figma-color-bg-hover, #f5f5f5); }
+  .intent-row.applied { background: rgba(20, 174, 92, 0.06); }
+  .intent-name-cell { flex: 1; min-width: 0; cursor: pointer; }
+  .intent-name-cell:hover { color: var(--figma-color-text-brand, #0d99ff); }
+  .intent-node-name {
+    font-weight: 500; font-size: 11px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .intent-node-path {
+    font-size: 9px; color: var(--figma-color-text-secondary, #999);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;
+  }
+  .intent-type-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    color: #fff; flex-shrink: 0; font-weight: 600; line-height: 1.4;
+  }
+  .intent-select {
+    padding: 4px 6px; border: 1px solid var(--figma-color-border, #ddd);
+    border-radius: 4px; font-size: 10px; background: var(--figma-color-bg, #fff);
+    color: var(--figma-color-text, #333); flex-shrink: 0;
+  }
+  .intent-arrow { color: var(--figma-color-text-secondary, #bbb); font-size: 12px; flex-shrink: 0; }
+  .confidence-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; vertical-align: middle; }
+  .intent-summary {
+    display: flex; gap: 10px; font-size: 10px; padding: 6px 0;
+    color: var(--figma-color-text-secondary, #999);
+  }
+
+  /* ─── MCP Responsive Annotations ─── */
+  .resp-form { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .resp-form label { display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; }
+  .resp-form label input[type="checkbox"] { flex-shrink: 0; }
+  .resp-form select {
+    padding: 3px 6px; border: 1px solid var(--figma-color-border, #ddd);
+    border-radius: 4px; font-size: 11px; background: var(--figma-color-bg, #fff); color: var(--figma-color-text, #333);
+  }
+  .resp-annotation-list { max-height: 150px; overflow-y: auto; margin-top: 8px; }
+  .resp-annotation-item {
+    display: flex; align-items: center; gap: 6px; padding: 4px 0;
+    border-bottom: 1px solid var(--figma-color-border, #e5e5e5); font-size: 11px;
+  }
+  .resp-hint-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    background: #e8f4fd; color: #0d99ff;
+  }
+
+  /* ─── MCP Prompt Overlay ─── */
+  .mcp-prompt-overlay {
+    display: none; position: relative;
+  }
+  .mcp-prompt-overlay.active { display: block; }
+  .mcp-prompt-bar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .mcp-prompt-stats { font-size: 10px; color: var(--figma-color-text-secondary, #999); margin: 4px 0 8px; }
+
+  /* ─── Framework Selector ─── */
+  .framework-selector { display:flex; gap:0; margin:8px 0; border:1px solid var(--figma-color-border,#ddd); border-radius:6px; overflow:hidden; }
+  .framework-selector .fw-option { flex:1; padding:6px 10px; font-size:11px; font-weight:500; text-align:center; cursor:pointer; border:none; background:var(--figma-color-bg,#fff); color:var(--figma-color-text-secondary,#999); transition:all 0.15s; }
+  .framework-selector .fw-option:not(:last-child) { border-right:1px solid var(--figma-color-border,#ddd); }
+  .framework-selector .fw-option.active { background:var(--figma-color-bg-brand,#0d99ff); color:#fff; }
+
+  /* ─── MCP Screen Flow ─── */
+  .flow-screen { margin-bottom: 8px; }
+  .flow-screen-name { font-weight: 600; font-size: 11px; margin-bottom: 4px; cursor: pointer; }
+  .flow-screen-name:hover { color: var(--figma-color-text-brand, #0d99ff); }
+  .flow-edge { font-size: 10px; color: var(--figma-color-text-secondary, #666); padding: 2px 0 2px 12px; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" data-tab="aiready">AI Ready</div>
+  <div class="tab" data-tab="audit">Audit</div>
+  <div class="tab" data-tab="fix">Fix</div>
+  <div class="tab" data-tab="cleanup">Cleanup</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 2: AUDIT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="audit" class="panel">
+  <div class="section-header">Design System Health Check</div>
+  <div class="section-desc">Run a comprehensive audit across 7 quality dimensions.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-run-audit">Audit Page</button>
+    <button class="btn btn-secondary" id="btn-run-audit-selection">Audit Selection</button>
+    <button class="btn btn-secondary" id="btn-export-report" disabled>Export Report</button>
+  </div>
+
+  <div id="audit-loading" class="status-bar"><span class="spinner"></span> Scanning all layers...</div>
+
+  <div id="audit-results" style="display:none;">
+    <!-- Score Ring -->
+    <div class="score-container">
+      <div class="score-ring">
+        <svg viewBox="0 0 72 72">
+          <circle class="bg" cx="36" cy="36" r="30"></circle>
+          <circle class="fg" id="score-arc" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"></circle>
+        </svg>
+        <div class="score-value" id="score-value">--</div>
+      </div>
+      <div class="score-meta">
+        <div class="score-label" id="score-grade">--</div>
+        <div class="score-detail" id="score-summary">Run audit to see results</div>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+      <div class="stat-card" id="card-unnamed">
+        <div class="count" id="count-unnamed">0</div>
+        <div class="label">Unnamed Layers</div>
+      </div>
+      <div class="stat-card" id="card-no-al">
+        <div class="count" id="count-no-al">0</div>
+        <div class="label">No Auto Layout</div>
+      </div>
+      <div class="stat-card" id="card-generic">
+        <div class="count" id="count-generic">0</div>
+        <div class="label">Generic Props</div>
+      </div>
+      <div class="stat-card" id="card-no-desc">
+        <div class="count" id="count-no-desc">0</div>
+        <div class="label">No Description</div>
+      </div>
+      <div class="stat-card" id="card-booleans">
+        <div class="count" id="count-booleans">0</div>
+        <div class="label">Bad Booleans</div>
+      </div>
+      <div class="stat-card" id="card-missing-states">
+        <div class="count" id="count-missing-states">0</div>
+        <div class="label">Missing States</div>
+      </div>
+    </div>
+
+    <div id="audit-detail"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 3: FIX -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="fix" class="panel">
+  <!-- Smart Rename Section -->
+  <div class="section-header">Smart Rename</div>
+  <div class="section-desc">Detect unnamed layers and get context-aware name suggestions. Click any name to select it in Figma.</div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-scan-unnamed">Scan Unnamed Layers</button>
+  </div>
+  <div id="rename-loading" class="status-bar"><span class="spinner"></span> Scanning and generating suggestions...</div>
+  <div id="rename-results" style="display:none;">
+    <div id="rename-count-msg" style="margin-bottom:8px; font-weight:500;"></div>
+    <div class="item-list" id="rename-list"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-apply-rename" disabled>Apply Selected</button>
+      <button class="btn btn-secondary" id="btn-select-unnamed">Select All in Figma</button>
+    </div>
+    <div id="rename-status" class="status-bar"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Find & Replace -->
+  <div class="section-header">Find & Replace in Names</div>
+  <div class="section-desc">Replace text across all layer names.</div>
+  <div class="find-replace-row">
+    <input type="text" id="fr-find" placeholder="Find...">
+    <span class="arrow">&rarr;</span>
+    <input type="text" id="fr-replace" placeholder="Replace with...">
+    <button class="btn btn-primary" id="btn-find-replace">Replace All</button>
+  </div>
+  <div id="fr-status" class="status-bar"></div>
+
+  <hr class="divider">
+
+  <!-- Description Generator -->
+  <div class="section-header">Auto-Generate Descriptions</div>
+  <div class="section-desc">Generate descriptions for components that lack them. Click a name to select it in Figma.</div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-gen-desc">Scan Components</button>
+  </div>
+  <div id="desc-loading" class="status-bar"><span class="spinner"></span> Generating descriptions...</div>
+  <div id="desc-results" style="display:none;">
+    <div id="desc-count-msg" style="margin-bottom:8px; font-weight:500;"></div>
+    <div class="item-list" id="desc-list" style="max-height:240px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-success" id="btn-apply-desc" disabled>Apply All Descriptions</button>
+    </div>
+    <div id="desc-status" class="status-bar"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Auto Layout Check Section -->
+  <div class="section-header">Auto Layout Check</div>
+  <div class="section-desc">Find frames without Auto Layout. Click any name to select it in Figma.</div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-scan-al">Scan Frames</button>
+  </div>
+  <div id="al-loading" class="status-bar"><span class="spinner"></span> Scanning frames...</div>
+  <div id="al-results" style="display:none;">
+    <div id="al-count-msg" style="margin-bottom:8px; font-weight:500;"></div>
+
+    <div class="settings-row">
+      <div class="setting-group">
+        <label>Direction:</label>
+        <select id="al-direction">
+          <option value="">Smart Detect</option>
+          <option value="VERTICAL">Vertical</option>
+          <option value="HORIZONTAL">Horizontal</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label>Gap:</label>
+        <input type="number" id="al-gap" value="" placeholder="auto" min="0">
+      </div>
+      <div class="setting-group">
+        <label>Padding:</label>
+        <input type="number" id="al-padding" value="0" min="0">
+      </div>
+    </div>
+
+    <div class="item-list" id="al-list"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-apply-al-selected" disabled>Apply to Selected</button>
+      <button class="btn btn-danger" id="btn-apply-al-all" disabled>Apply to All</button>
+      <button class="btn btn-secondary" id="btn-select-al">Select All in Figma</button>
+    </div>
+    <div id="al-status" class="status-bar"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 1: AI READY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="aiready" class="panel active">
+  <div class="section-header">AI Ready Score</div>
+  <div class="section-desc">Scores how well AI tools can translate your design into code. Checks naming, token usage, layout, structure, spacing, and readability — the factors that determine whether AI generates clean code or a mess.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-run-mcp">Audit Page</button>
+    <button class="btn btn-secondary" id="btn-run-mcp-selection">Audit Selection</button>
+  </div>
+
+  <div id="mcp-loading" class="status-bar"><span class="spinner"></span> Analyzing design for AI code generation quality...</div>
+
+  <!-- Prompt Generator Section — always visible -->
+  <div class="mcp-section" id="mcp-prompt-section" style="margin-top:10px;">
+    <div class="mcp-section-header" data-section="mcp-prompt">
+      <span>Prompt Generator</span>
+      <span class="mcp-section-chevron">&#9660;</span>
+    </div>
+    <div class="mcp-section-body" id="mcp-prompt-body">
+      <div class="section-desc" style="margin:6px 0 8px;">Generate an AI-ready code prompt from your design.</div>
+      <div class="framework-selector" id="fw-selector-audit" style="margin:0 0 8px;">
+        <button class="fw-option active" data-fw="expo">Expo</button>
+        <button class="fw-option" data-fw="cli">React Native CLI</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-mcp-generate-prompt">Generate AI Prompt</button>
+        <button class="btn btn-secondary" id="btn-quick-generate">Generate from Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Component Mapping Section — always visible -->
+  <div class="mcp-section" id="mcp-intents-section">
+    <div class="mcp-section-header" data-section="mcp-intents">
+      <span>Component Mapping</span>
+      <span class="mcp-section-badge" id="mcp-intents-badge">0</span>
+      <span class="mcp-section-chevron">&#9660;</span>
+    </div>
+    <div class="mcp-section-body" id="mcp-intents-body">
+      <div class="section-desc" style="margin:0 0 6px;">Map Figma components to React Native equivalents for accurate code generation.</div>
+      <div class="btn-row" style="margin-bottom:6px;">
+        <button class="btn btn-primary btn-sm" id="btn-mcp-auto-detect">Auto-Detect</button>
+        <button class="btn btn-success btn-sm" id="btn-mcp-apply-intents" style="display:none;">Apply All</button>
+      </div>
+      <div id="mcp-intents-status" class="status-bar"></div>
+      <div id="mcp-intents-summary" style="display:none;"></div>
+      <div id="mcp-intents-list" class="mcp-intents-scroll"></div>
+    </div>
+  </div>
+
+  <div id="mcp-results" style="display:none;">
+    <div class="score-container">
+      <div class="score-ring">
+        <svg viewBox="0 0 72 72">
+          <circle class="bg" cx="36" cy="36" r="30"></circle>
+          <circle class="fg" id="mcp-score-arc" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"></circle>
+        </svg>
+        <div class="score-value" id="mcp-score-value">--</div>
+      </div>
+      <div class="score-meta">
+        <div class="score-label" id="mcp-score-grade">--</div>
+        <div class="score-detail" id="mcp-score-summary">Run AI Ready audit to see results</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card" id="mcp-card-naming">
+        <div class="count" id="mcp-count-naming">0</div>
+        <div class="label">Naming</div>
+        <div class="mcp-card-deduction" id="mcp-ded-naming"></div>
+      </div>
+      <div class="stat-card" id="mcp-card-tokens">
+        <div class="count" id="mcp-count-tokens">0</div>
+        <div class="label">Token Binding</div>
+        <div class="mcp-card-deduction" id="mcp-ded-tokens"></div>
+      </div>
+      <div class="stat-card" id="mcp-card-layout">
+        <div class="count" id="mcp-count-layout">0</div>
+        <div class="label">Auto Layout</div>
+        <div class="mcp-card-deduction" id="mcp-ded-layout"></div>
+      </div>
+      <div class="stat-card" id="mcp-card-structure">
+        <div class="count" id="mcp-count-structure">0</div>
+        <div class="label">Structure</div>
+        <div class="mcp-card-deduction" id="mcp-ded-structure"></div>
+      </div>
+      <div class="stat-card" id="mcp-card-spacing">
+        <div class="count" id="mcp-count-spacing">0</div>
+        <div class="label">Spacing</div>
+        <div class="mcp-card-deduction" id="mcp-ded-spacing"></div>
+      </div>
+      <div class="stat-card" id="mcp-card-readability">
+        <div class="count" id="mcp-count-readability">0</div>
+        <div class="label">Readability</div>
+        <div class="mcp-card-deduction" id="mcp-ded-readability"></div>
+      </div>
+    </div>
+
+    <!-- Issue Details -->
+    <div id="mcp-detail"></div>
+
+    <!-- State Coverage Section -->
+    <div class="mcp-section" id="mcp-states-section" style="display:none;">
+      <div class="mcp-section-header" data-section="mcp-states">
+        <span>State Coverage</span>
+        <span class="mcp-section-badge" id="mcp-states-badge">0</span>
+        <span class="mcp-section-chevron">&#9660;</span>
+      </div>
+      <div class="mcp-section-body" id="mcp-states-body"></div>
+    </div>
+
+    <!-- Assets Section -->
+    <div class="mcp-section" id="mcp-assets-section" style="display:none;">
+      <div class="mcp-section-header" data-section="mcp-assets">
+        <span>Assets</span>
+        <span class="mcp-section-badge" id="mcp-assets-badge">0</span>
+        <span class="mcp-section-chevron">&#9660;</span>
+      </div>
+      <div class="mcp-section-body" id="mcp-assets-body"></div>
+    </div>
+
+    <!-- Screen Flow Section -->
+    <div class="mcp-section" id="mcp-flow-section" style="display:none;">
+      <div class="mcp-section-header" data-section="mcp-flow">
+        <span>Screen Flow</span>
+        <span class="mcp-section-badge" id="mcp-flow-badge">0</span>
+        <span class="mcp-section-chevron">&#9660;</span>
+      </div>
+      <div class="mcp-section-body" id="mcp-flow-body"></div>
+    </div>
+
+    <!-- Responsive Annotations Section -->
+    <div class="mcp-section" id="mcp-responsive-section">
+      <div class="mcp-section-header" data-section="mcp-responsive">
+        <span>Responsive Annotations</span>
+        <span class="mcp-section-badge" id="mcp-responsive-badge">0</span>
+        <span class="mcp-section-chevron">&#9660;</span>
+      </div>
+      <div class="mcp-section-body collapsed" id="mcp-responsive-body">
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" id="btn-mcp-load-selection">Load Selected Node</button>
+        </div>
+        <div id="mcp-resp-node-info" style="display:none;">
+          <div style="font-size:11px;font-weight:500;margin:6px 0 4px;" id="mcp-resp-node-name"></div>
+          <div class="resp-form">
+            <label><input type="checkbox" id="resp-scrollable"> Scrollable region</label>
+            <label><input type="checkbox" id="resp-truncate"> Text truncation (ellipsis)</label>
+            <label><input type="checkbox" id="resp-fixed"> Fixed / Sticky element</label>
+            <label><input type="checkbox" id="resp-expandable"> Expandable / Collapsible</label>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+              <span>Platform:</span>
+              <select id="resp-platform">
+                <option value="">None</option>
+                <option value="ios">iOS only</option>
+                <option value="android">Android only</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary btn-sm" id="btn-mcp-save-responsive">Save Annotation</button>
+          </div>
+        </div>
+        <div id="mcp-resp-annotations-list" class="resp-annotation-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Overlay -->
+  <div class="mcp-prompt-overlay" id="mcp-prompt-overlay">
+    <div class="mcp-prompt-bar">
+      <button class="btn btn-secondary btn-sm" id="btn-mcp-prompt-back">Back</button>
+      <button class="btn btn-secondary btn-sm" id="btn-mcp-regenerate">Regenerate</button>
+    </div>
+    <div class="mcp-prompt-stats" id="mcp-prompt-stats"></div>
+    <div class="code-block" style="max-height:500px;">
+      <button class="copy-btn" id="btn-copy-prompt">Copy</button>
+      <pre id="mcp-prompt-text"></pre>
+    </div>
+  </div>
+
+  <div id="mcp-fix-status" class="status-bar"></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 4: CLEANUP -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="cleanup" class="panel">
+  <div class="section-header">Design Cleanup</div>
+  <div class="section-desc">Find detached instances, unused styles, layer issues, missing annotations, and accessibility problems. Includes bulk fix actions.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-run-cleanup">Run Cleanup Scan</button>
+  </div>
+
+  <div id="cleanup-loading" class="status-bar"><span class="spinner"></span> Scanning for cleanup opportunities...</div>
+
+  <div id="cleanup-results" style="display:none;">
+    <div class="score-container">
+      <div class="score-ring">
+        <svg viewBox="0 0 72 72">
+          <circle class="bg" cx="36" cy="36" r="30"></circle>
+          <circle class="fg" id="cleanup-score-arc" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"></circle>
+        </svg>
+        <div class="score-value" id="cleanup-score-value">--</div>
+      </div>
+      <div class="score-meta">
+        <div class="score-label" id="cleanup-score-grade">--</div>
+        <div class="score-detail" id="cleanup-score-summary">Run cleanup scan to see results</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card" id="cl-card-detached"><div class="count" id="cl-count-detached">0</div><div class="label">Detached</div></div>
+      <div class="stat-card" id="cl-card-unused"><div class="count" id="cl-count-unused">0</div><div class="label">Unused Styles</div></div>
+      <div class="stat-card" id="cl-card-coverage"><div class="count" id="cl-count-coverage">0</div><div class="label">DS Coverage</div></div>
+      <div class="stat-card" id="cl-card-layers"><div class="count" id="cl-count-layers">0</div><div class="label">Layer Issues</div></div>
+      <div class="stat-card" id="cl-card-annotations"><div class="count" id="cl-count-annotations">0</div><div class="label">No Annotations</div></div>
+    </div>
+
+    <div id="cleanup-detail"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCRIPT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<script>
+  // ─── State ───
+  var auditData = null;
+  var renameData = [];
+  var alData = [];
+  var descData = [];
+  var alCheckedIds = {};
+  var mcpData = null;
+  var mcpIntentDetections = [];
+  var mcpRespNodeId = null;
+  var mcpRespAnnotations = [];
+  var selectedFramework = 'expo';
+  var cleanupData = null;
+
+  function copyToClipboard(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+
+  // ─── Tab Switching ───
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ─── Helpers ───
+  function show(id) { document.getElementById(id).style.display = ''; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+  function showStatus(id, cls) {
+    var el = document.getElementById(id);
+    el.className = 'status-bar visible' + (cls ? ' ' + cls : '');
+  }
+
+  function postMsg(msg) { parent.postMessage({ pluginMessage: msg }, '*'); }
+
+  function setStatColor(id, count) {
+    var el = document.getElementById(id);
+    el.className = 'count ' + (count > 0 ? 'warn' : 'ok');
+  }
+
+  function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escAttr(str) { return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  function scoreColor(score) {
+    if (score >= 90) return '#14ae5c';
+    if (score >= 70) return '#0d99ff';
+    if (score >= 50) return '#f5a623';
+    return '#f24822';
+  }
+
+  function scoreGrade(score) {
+    if (score >= 90) return 'Excellent';
+    if (score >= 70) return 'Good';
+    if (score >= 50) return 'Needs Work';
+    return 'Critical';
+  }
+
+  function scoreGradeClass(score) {
+    if (score >= 90) return 'grade-a';
+    if (score >= 70) return 'grade-b';
+    if (score >= 50) return 'grade-c';
+    return 'grade-d';
+  }
+
+  function renderRespAnnotations() {
+    var listEl = document.getElementById('mcp-resp-annotations-list');
+    var badge = document.getElementById('mcp-responsive-badge');
+    badge.textContent = mcpRespAnnotations.length;
+    if (mcpRespAnnotations.length === 0) {
+      listEl.innerHTML = '<div style="font-size:11px;color:var(--figma-color-text-secondary,#999);font-style:italic;padding:4px 0;">No responsive annotations yet.</div>';
+      return;
+    }
+    var h = '';
+    for (var ra = 0; ra < mcpRespAnnotations.length; ra++) {
+      var ann = mcpRespAnnotations[ra];
+      var tags = [];
+      if (ann.hints.scrollable) tags.push('scrollable');
+      if (ann.hints.truncate) tags.push('truncate');
+      if (ann.hints.fixed) tags.push('fixed');
+      if (ann.hints.expandable) tags.push('expandable');
+      if (ann.hints.platform) tags.push(ann.hints.platform);
+      h += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--figma-color-border,#eee);">';
+      h += '<span class="mcp-issue-name" style="flex:1;cursor:pointer;" data-node-id="' + escAttr(ann.id) + '">' + escHtml(ann.name) + '</span>';
+      h += '<span style="font-size:10px;color:var(--figma-color-text-secondary,#999);">' + escHtml(tags.join(', ')) + '</span>';
+      h += '<button class="btn btn-sm btn-secondary mcp-clear-resp-btn" data-node-id="' + escAttr(ann.id) + '" style="padding:2px 6px;font-size:9px;">Clear</button>';
+      h += '</div>';
+    }
+    listEl.innerHTML = h;
+    listEl.querySelectorAll('.mcp-issue-name[data-node-id]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+      });
+    });
+    listEl.querySelectorAll('.mcp-clear-resp-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        postMsg({ type: 'mcp-clear-responsive', nodeId: btn.dataset.nodeId });
+      });
+    });
+  }
+
+  // ─── Stat card click → select nodes ───
+  function bindStatCard(cardId, getIds) {
+    document.getElementById(cardId).addEventListener('click', function() {
+      if (auditData) {
+        var ids = getIds();
+        if (ids.length > 0) postMsg({ type: 'select-nodes', nodeIds: ids });
+      }
+    });
+  }
+
+  bindStatCard('card-unnamed', function() { return auditData.unnamed.map(function(n) { return n.id; }); });
+  bindStatCard('card-no-al', function() { return auditData.noAutoLayout.map(function(n) { return n.id; }); });
+  bindStatCard('card-generic', function() { return auditData.genericProps.map(function(n) { return n.id; }); });
+  bindStatCard('card-no-desc', function() { return auditData.noDescription.map(function(n) { return n.id; }); });
+  bindStatCard('card-booleans', function() { return auditData.inconsistentBooleans.map(function(n) { return n.id; }); });
+  bindStatCard('card-missing-states', function() { return auditData.missingStates.map(function(n) { return n.sampleNodeId; }); });
+
+  // ═══════════════════════════════════════════════════════
+  // TAB 2: AUDIT
+  // ═══════════════════════════════════════════════════════
+  document.getElementById('btn-run-audit').addEventListener('click', function() {
+    showStatus('audit-loading', '');
+    hide('audit-results');
+    postMsg({ type: 'run-audit', scope: 'page' });
+  });
+
+  document.getElementById('btn-run-audit-selection').addEventListener('click', function() {
+    showStatus('audit-loading', '');
+    hide('audit-results');
+    postMsg({ type: 'run-audit', scope: 'selection' });
+  });
+
+  document.getElementById('btn-export-report').addEventListener('click', function() {
+    if (!auditData) return;
+    // Generate report text in plugin code (has access to page name)
+    postMsg({ type: 'export-report', auditData: auditData });
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // TAB 3: FIX
+  // ═══════════════════════════════════════════════════════
+
+  // ── Smart Rename ──
+  document.getElementById('btn-scan-unnamed').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Scanning...';
+    showStatus('rename-loading', '');
+    hide('rename-results');
+    postMsg({ type: 'scan-unnamed' });
+  });
+
+  document.getElementById('btn-apply-rename').addEventListener('click', function() {
+    var inputs = document.querySelectorAll('#rename-list input[type="text"]');
+    var mappings = [];
+    inputs.forEach(function(input) {
+      var cb = input.parentElement.querySelector('input[type="checkbox"]');
+      if ((!cb || cb.checked) && input.value.trim()) {
+        mappings.push({ id: input.dataset.nodeId, newName: input.value.trim() });
+      }
+    });
+    if (mappings.length === 0) {
+      var rs = document.getElementById('rename-status');
+      rs.className = 'status-bar error visible';
+      rs.textContent = 'No items selected. Check at least one row.';
+      return;
+    }
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    postMsg({ type: 'batch-rename', mappings: mappings });
+  });
+
+  document.getElementById('btn-select-unnamed').addEventListener('click', function() {
+    if (renameData.length > 0) postMsg({ type: 'select-nodes', nodeIds: renameData.map(function(n) { return n.id; }) });
+  });
+
+  // ── Find & Replace ──
+  document.getElementById('btn-find-replace').addEventListener('click', function() {
+    var find = document.getElementById('fr-find').value;
+    var replace = document.getElementById('fr-replace').value;
+    if (!find) {
+      var frs = document.getElementById('fr-status');
+      frs.className = 'status-bar error visible';
+      frs.textContent = 'Enter a search term first.';
+      return;
+    }
+    this.disabled = true;
+    this.textContent = 'Replacing...';
+    postMsg({ type: 'find-replace', find: find, replace: replace });
+  });
+
+  // ── Description Generator ──
+  document.getElementById('btn-gen-desc').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Scanning...';
+    showStatus('desc-loading', '');
+    hide('desc-results');
+    postMsg({ type: 'generate-descriptions' });
+  });
+
+  document.getElementById('btn-apply-desc').addEventListener('click', function() {
+    var textareas = document.querySelectorAll('#desc-list textarea');
+    var mappings = [];
+    textareas.forEach(function(ta) {
+      if (ta.value.trim()) {
+        mappings.push({ id: ta.dataset.nodeId, description: ta.value.trim() });
+      }
+    });
+    if (mappings.length === 0) return;
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    postMsg({ type: 'apply-descriptions', mappings: mappings });
+  });
+
+  // ── Auto Layout ──
+  document.getElementById('btn-scan-al').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Scanning...';
+    showStatus('al-loading', '');
+    hide('al-results');
+    postMsg({ type: 'scan-auto-layout' });
+  });
+
+  document.getElementById('btn-apply-al-selected').addEventListener('click', function() {
+    var ids = Object.keys(alCheckedIds).filter(function(k) { return alCheckedIds[k]; });
+    if (ids.length === 0) return;
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    var dir = document.getElementById('al-direction').value || null;
+    var gapVal = document.getElementById('al-gap').value;
+    var padVal = document.getElementById('al-padding').value;
+    postMsg({
+      type: 'apply-auto-layout', nodeIds: ids,
+      direction: dir, gap: gapVal !== '' ? parseInt(gapVal) : null, padding: padVal !== '' ? parseInt(padVal) : 0
+    });
+  });
+
+  document.getElementById('btn-apply-al-all').addEventListener('click', function() {
+    if (alData.length === 0) return;
+    if (!confirm('Apply Auto Layout to ALL ' + alData.length + ' frames?')) return;
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    var dir = document.getElementById('al-direction').value || null;
+    var gapVal = document.getElementById('al-gap').value;
+    var padVal = document.getElementById('al-padding').value;
+    postMsg({
+      type: 'apply-auto-layout', nodeIds: alData.map(function(n) { return n.id; }),
+      direction: dir, gap: gapVal !== '' ? parseInt(gapVal) : null, padding: padVal !== '' ? parseInt(padVal) : 0
+    });
+  });
+
+  document.getElementById('btn-select-al').addEventListener('click', function() {
+    if (alData.length > 0) postMsg({ type: 'select-nodes', nodeIds: alData.map(function(n) { return n.id; }) });
+  });
+
+
+  // ═══════════════════════════════════════════════════════
+  // TAB 1: AI READY
+  // ═══════════════════════════════════════════════════════
+  document.getElementById('btn-run-mcp').addEventListener('click', function() {
+    showStatus('mcp-loading', '');
+    hide('mcp-results');
+    postMsg({ type: 'run-mcp-audit', scope: 'page' });
+  });
+
+  document.getElementById('btn-run-mcp-selection').addEventListener('click', function() {
+    showStatus('mcp-loading', '');
+    hide('mcp-results');
+    postMsg({ type: 'run-mcp-audit', scope: 'selection' });
+  });
+
+  function bindMcpStatCard(cardId, getIds) {
+    document.getElementById(cardId).addEventListener('click', function() {
+      if (mcpData) {
+        var ids = getIds();
+        if (ids.length > 0) postMsg({ type: 'select-nodes', nodeIds: ids });
+      }
+    });
+  }
+
+  bindMcpStatCard('mcp-card-naming', function() { return mcpData.naming.issues.map(function(n) { return n.id; }); });
+  bindMcpStatCard('mcp-card-tokens', function() { return mcpData.tokens.issues.map(function(n) { return n.id; }); });
+  bindMcpStatCard('mcp-card-layout', function() { return mcpData.layout.issues.map(function(n) { return n.id; }); });
+  bindMcpStatCard('mcp-card-structure', function() { return mcpData.structure.issues.map(function(n) { return n.id; }); });
+  bindMcpStatCard('mcp-card-spacing', function() { return mcpData.spacing.issues.map(function(n) { return n.id; }); });
+  bindMcpStatCard('mcp-card-readability', function() { return mcpData.readability.issues.map(function(n) { return n.id; }); });
+
+  // ── Framework Selector Sync ──
+  function syncFrameworkSelectors(fw) {
+    selectedFramework = fw;
+    var selectors = document.querySelectorAll('.framework-selector');
+    for (var si = 0; si < selectors.length; si++) {
+      var opts = selectors[si].querySelectorAll('.fw-option');
+      for (var oi = 0; oi < opts.length; oi++) {
+        if (opts[oi].getAttribute('data-fw') === fw) opts[oi].classList.add('active');
+        else opts[oi].classList.remove('active');
+      }
+    }
+  }
+  document.querySelectorAll('.framework-selector .fw-option').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      syncFrameworkSelectors(this.getAttribute('data-fw'));
+    });
+  });
+
+  // ── MCP Generate Prompt ──
+  document.getElementById('btn-mcp-generate-prompt').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Generating...';
+    var scope = mcpData && mcpData.scope === 'selection' ? 'selection' : 'page';
+    postMsg({ type: 'mcp-generate-prompt', scope: scope, framework: selectedFramework });
+  });
+
+  document.getElementById('btn-quick-generate').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Generating...';
+    postMsg({ type: 'mcp-generate-prompt', scope: 'selection', framework: selectedFramework });
+  });
+
+  document.getElementById('btn-mcp-prompt-back').addEventListener('click', function() {
+    hide('mcp-prompt-overlay');
+    document.getElementById('mcp-prompt-overlay').classList.remove('active');
+    show('mcp-prompt-section');
+    show('mcp-intents-section');
+    if (mcpData) {
+      show('mcp-results');
+    }
+  });
+
+  document.getElementById('btn-mcp-regenerate').addEventListener('click', function() {
+    var scope = mcpData && mcpData.scope === 'selection' ? 'selection' : 'page';
+    postMsg({ type: 'mcp-generate-prompt', scope: scope, framework: selectedFramework });
+  });
+
+  document.getElementById('btn-copy-prompt').addEventListener('click', function() {
+    var text = document.getElementById('mcp-prompt-text').textContent;
+    copyToClipboard(text);
+    this.textContent = 'Copied!';
+    var self = this;
+    setTimeout(function() { self.textContent = 'Copy'; }, 1500);
+  });
+
+  // ── MCP Auto-Detect Intents ──
+  document.getElementById('btn-mcp-auto-detect').addEventListener('click', function() {
+    this.disabled = true;
+    this.textContent = 'Detecting...';
+    var statusEl = document.getElementById('mcp-intents-status');
+    statusEl.className = 'status-bar visible';
+    statusEl.innerHTML = '<span class="spinner"></span> Scanning for components...';
+    document.getElementById('mcp-intents-list').innerHTML = '';
+    document.getElementById('mcp-intents-summary').style.display = 'none';
+    document.getElementById('btn-mcp-apply-intents').style.display = 'none';
+    var scope = mcpData && mcpData.scope === 'selection' ? 'selection' : 'page';
+    postMsg({ type: 'mcp-auto-detect-intents', scope: scope });
+  });
+
+  document.getElementById('btn-mcp-apply-intents').addEventListener('click', function() {
+    var selects = document.querySelectorAll('#mcp-intents-list .intent-select');
+    var mappings = [];
+    selects.forEach(function(sel) {
+      if (sel.value) {
+        mappings.push({ id: sel.dataset.nodeId, intent: sel.value });
+      }
+    });
+    if (mappings.length === 0) {
+      var statusEl = document.getElementById('mcp-intents-status');
+      statusEl.className = 'status-bar error visible';
+      statusEl.textContent = 'No mappings selected. Choose a component type for at least one row.';
+      return;
+    }
+    this.disabled = true;
+    this.textContent = 'Applying...';
+    var statusEl2 = document.getElementById('mcp-intents-status');
+    statusEl2.className = 'status-bar visible';
+    statusEl2.innerHTML = '<span class="spinner"></span> Applying ' + mappings.length + ' mapping(s)...';
+    postMsg({ type: 'mcp-batch-set-intents', mappings: mappings });
+  });
+
+  // ── MCP Responsive Annotations ──
+  document.getElementById('btn-mcp-load-selection').addEventListener('click', function() {
+    postMsg({ type: 'mcp-get-selection-data' });
+  });
+
+  document.getElementById('btn-mcp-save-responsive').addEventListener('click', function() {
+    if (!mcpRespNodeId) return;
+    var hints = {
+      scrollable: document.getElementById('resp-scrollable').checked,
+      truncate: document.getElementById('resp-truncate').checked,
+      fixed: document.getElementById('resp-fixed').checked,
+      expandable: document.getElementById('resp-expandable').checked,
+      platform: document.getElementById('resp-platform').value || null
+    };
+    postMsg({ type: 'mcp-set-responsive', nodeId: mcpRespNodeId, hints: hints });
+  });
+
+  // ── MCP Section collapse/expand ──
+  document.querySelectorAll('.mcp-section-header').forEach(function(header) {
+    header.addEventListener('click', function() {
+      var sectionName = header.dataset.section;
+      var body = document.getElementById(sectionName + '-body');
+      var chevron = header.querySelector('.mcp-section-chevron');
+      if (body.classList.contains('collapsed') || body.style.display === 'none') {
+        body.classList.remove('collapsed');
+        body.style.display = '';
+        chevron.innerHTML = '&#9660;';
+      } else {
+        body.classList.add('collapsed');
+        body.style.display = 'none';
+        chevron.innerHTML = '&#9654;';
+      }
+    });
+  });
+
+
+  // ═══════════════════════════════════════════════════════
+  // TAB 4: CLEANUP
+  // ═══════════════════════════════════════════════════════
+  document.getElementById('btn-run-cleanup').addEventListener('click', function() {
+    showStatus('cleanup-loading', '');
+    hide('cleanup-results');
+    postMsg({ type: 'run-cleanup' });
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // MESSAGE HANDLER
+  // ═══════════════════════════════════════════════════════
+  window.onmessage = function(event) {
+    var msg = event.data.pluginMessage;
+    if (!msg) return;
+
+    switch (msg.type) {
+      // ── Audit ──
+      case 'audit-result': {
+        document.getElementById('audit-loading').className = 'status-bar';
+
+        if (msg.error) {
+          document.getElementById('audit-loading').className = 'status-bar error';
+          document.getElementById('audit-loading').innerHTML = msg.error;
+          break;
+        }
+
+        auditData = msg.data;
+        show('audit-results');
+        document.getElementById('btn-export-report').disabled = false;
+
+        var s = auditData.score;
+        var circumference = 188.5;
+        var offset = circumference - (s / 100) * circumference;
+        var arc = document.getElementById('score-arc');
+        arc.style.strokeDashoffset = offset;
+        arc.style.stroke = scoreColor(s);
+
+        document.getElementById('score-value').textContent = s;
+        document.getElementById('score-value').style.color = scoreColor(s);
+        document.getElementById('score-grade').textContent = scoreGrade(s);
+        document.getElementById('score-grade').className = 'score-label ' + scoreGradeClass(s);
+
+        var total = auditData.unnamed.length + auditData.noAutoLayout.length + auditData.genericProps.length +
+          auditData.noDescription.length + auditData.inconsistentBooleans.length + auditData.missingStates.length;
+        var auditScopeLabel = auditData.scope === 'selection' ? ' — ' + auditData.scopeName : '';
+        document.getElementById('score-summary').textContent =
+          auditData.totalNodes + ' nodes scanned, ' + auditData.totalComponents + ' components, ' + total + ' issues found' + auditScopeLabel;
+
+        // Stats
+        document.getElementById('count-unnamed').textContent = auditData.unnamed.length;
+        document.getElementById('count-no-al').textContent = auditData.noAutoLayout.length;
+        document.getElementById('count-generic').textContent = auditData.genericProps.length;
+        document.getElementById('count-no-desc').textContent = auditData.noDescription.length;
+        document.getElementById('count-booleans').textContent = auditData.inconsistentBooleans.length;
+        document.getElementById('count-missing-states').textContent = auditData.missingStates.length;
+
+        setStatColor('count-unnamed', auditData.unnamed.length);
+        setStatColor('count-no-al', auditData.noAutoLayout.length);
+        setStatColor('count-generic', auditData.genericProps.length);
+        setStatColor('count-no-desc', auditData.noDescription.length);
+        setStatColor('count-booleans', auditData.inconsistentBooleans.length);
+        setStatColor('count-missing-states', auditData.missingStates.length);
+
+        // Detail area
+        var detail = document.getElementById('audit-detail');
+        var html = '';
+
+
+        // Missing states
+        if (auditData.missingStates.length > 0) {
+          html += '<div class="section-header" style="font-size:12px;margin-top:10px;">Missing States</div>';
+          for (var m = 0; m < auditData.missingStates.length; m++) {
+            var ms = auditData.missingStates[m];
+            html += '<div class="missing-state-card"><div class="comp-name">' + escHtml(ms.componentName) +
+              '</div><div class="comp-type">' + ms.componentType + '</div><div class="state-pills">';
+            for (var e = 0; e < ms.existingStates.length; e++) {
+              html += '<span class="state-pill exists">' + escHtml(ms.existingStates[e]) + '</span>';
+            }
+            for (var mi = 0; mi < ms.missingStates.length; mi++) {
+              html += '<span class="state-pill missing">' + escHtml(ms.missingStates[mi]) + '</span>';
+            }
+            html += '</div></div>';
+          }
+        }
+
+        // Boolean issues
+        if (auditData.inconsistentBooleans.length > 0) {
+          html += '<div class="section-header" style="font-size:12px;margin-top:10px;">Boolean Naming Issues</div>';
+          for (var b = 0; b < auditData.inconsistentBooleans.length; b++) {
+            var bl = auditData.inconsistentBooleans[b];
+            html += '<div style="font-size:11px;padding:3px 0;"><span style="color:#f24822;">' + escHtml(bl.propertyName) + '=' +
+              escHtml(bl.currentValue) + '</span> &rarr; <span style="color:#14ae5c;">' + escHtml(bl.suggestion) + '</span></div>';
+          }
+        }
+
+        if (total === 0) {
+          html = '<div class="empty-state"><div class="big">&#10003;</div>All checks passed!</div>';
+        } else {
+          html += '<div style="margin-top:8px;font-size:10px;color:var(--figma-color-text-secondary,#999);">Click any stat card to select those nodes in Figma. Use other tabs to fix issues.</div>';
+        }
+
+        detail.innerHTML = html;
+
+
+
+        break;
+      }
+
+      case 'export-report-result': {
+        // Download as text file
+        var blob = new Blob([msg.data], { type: 'text/markdown' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'figma-audit-report.md';
+        a.click();
+        URL.revokeObjectURL(url);
+        break;
+      }
+
+      // ── Rename ──
+      case 'unnamed-result': {
+        document.getElementById('rename-loading').className = 'status-bar';
+        var scanBtn1 = document.getElementById('btn-scan-unnamed');
+        scanBtn1.disabled = false;
+        scanBtn1.textContent = 'Scan Unnamed Layers';
+        renameData = msg.data;
+        show('rename-results');
+
+        document.getElementById('rename-count-msg').textContent =
+          renameData.length + ' unnamed layer' + (renameData.length !== 1 ? 's' : '') + ' found';
+
+        var rnList = document.getElementById('rename-list');
+        if (renameData.length === 0) {
+          rnList.innerHTML = '<div class="empty-state"><div class="big">&#10003;</div>No unnamed layers found!</div>';
+          document.getElementById('btn-apply-rename').disabled = true;
+        } else {
+          var rnHtml = '<div class="select-all-row"><input type="checkbox" id="rename-select-all" checked> Select all (' + renameData.length + ')</div>';
+          renameData.forEach(function(item, i) {
+            rnHtml += '<div class="item">' +
+              '<input type="checkbox" class="rename-check" data-idx="' + i + '" checked>' +
+              '<span class="node-name clickable-name" data-node-id="' + escAttr(item.id) + '" title="' + escHtml(item.currentName) + '">' + escHtml(item.currentName) + '</span>' +
+              '<span class="arrow">&rarr;</span>' +
+              '<input type="text" value="' + escAttr(item.suggestedName) + '" data-node-id="' + item.id + '">' +
+              '<span class="node-path" title="' + escHtml(item.path) + '">' + escHtml(item.path) + '</span>' +
+              '</div>';
+          });
+          rnList.innerHTML = rnHtml;
+          document.getElementById('btn-apply-rename').disabled = false;
+          document.getElementById('btn-apply-rename').textContent = 'Apply Selected';
+
+          // Select-all toggle
+          document.getElementById('rename-select-all').addEventListener('change', function() {
+            var checked = this.checked;
+            document.querySelectorAll('.rename-check').forEach(function(cb) { cb.checked = checked; });
+          });
+          // Click name to select in Figma
+          rnList.querySelectorAll('.clickable-name').forEach(function(el) {
+            el.addEventListener('click', function() {
+              postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+            });
+          });
+        }
+        break;
+      }
+
+      case 'rename-result': {
+        var rr = msg.data;
+        var renameStatus = document.getElementById('rename-status');
+        renameStatus.className = 'status-bar success visible';
+        renameStatus.textContent = rr.renamed + ' layer' + (rr.renamed !== 1 ? 's' : '') + ' renamed.' +
+          (rr.errors.length > 0 ? ' ' + rr.errors.length + ' error(s).' : '');
+        document.getElementById('btn-apply-rename').disabled = true;
+        document.getElementById('btn-apply-rename').textContent = 'Apply Selected';
+        break;
+      }
+
+      case 'find-replace-result': {
+        var frBtn = document.getElementById('btn-find-replace');
+        frBtn.disabled = false;
+        frBtn.textContent = 'Replace All';
+        var frStatus = document.getElementById('fr-status');
+        frStatus.textContent = msg.count + ' layer name' + (msg.count !== 1 ? 's' : '') + ' updated.';
+        frStatus.className = 'status-bar visible ' + (msg.count > 0 ? 'success' : '');
+        break;
+      }
+
+      case 'descriptions-result': {
+        document.getElementById('desc-loading').className = 'status-bar';
+        var descScanBtn = document.getElementById('btn-gen-desc');
+        descScanBtn.disabled = false;
+        descScanBtn.textContent = 'Scan Components';
+        descData = msg.data;
+        show('desc-results');
+
+        document.getElementById('desc-count-msg').textContent =
+          descData.length + ' component' + (descData.length !== 1 ? 's' : '') + ' without descriptions';
+
+        var descList = document.getElementById('desc-list');
+        if (descData.length === 0) {
+          descList.innerHTML = '<div class="empty-state"><div class="big">&#10003;</div>All components have descriptions!</div>';
+          document.getElementById('btn-apply-desc').disabled = true;
+        } else {
+          var descHtml = '';
+          descData.forEach(function(item) {
+            descHtml += '<div class="desc-item">' +
+              '<div class="comp-name clickable-name" data-node-id="' + escAttr(item.id) + '">' + escHtml(item.name) + '</div>' +
+              '<textarea data-node-id="' + item.id + '">' + escHtml(item.generatedDesc) + '</textarea>' +
+              '</div>';
+          });
+          descList.innerHTML = descHtml;
+          document.getElementById('btn-apply-desc').disabled = false;
+          document.getElementById('btn-apply-desc').textContent = 'Apply All Descriptions';
+          // Click name to select in Figma
+          descList.querySelectorAll('.clickable-name').forEach(function(el) {
+            el.addEventListener('click', function() {
+              postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+            });
+          });
+        }
+        break;
+      }
+
+      case 'apply-descriptions-result': {
+        var dStatus = document.getElementById('desc-status');
+        dStatus.textContent = msg.data.applied + ' description' + (msg.data.applied !== 1 ? 's' : '') + ' applied.';
+        dStatus.className = 'status-bar visible success';
+        document.getElementById('btn-apply-desc').disabled = true;
+        document.getElementById('btn-apply-desc').textContent = 'Apply All Descriptions';
+        break;
+      }
+
+      // ── Auto Layout ──
+      case 'auto-layout-result': {
+        document.getElementById('al-loading').className = 'status-bar';
+        var alScanBtn = document.getElementById('btn-scan-al');
+        alScanBtn.disabled = false;
+        alScanBtn.textContent = 'Scan Frames';
+        alData = msg.data;
+        alCheckedIds = {};
+        show('al-results');
+
+        document.getElementById('al-count-msg').textContent =
+          alData.length + ' frame' + (alData.length !== 1 ? 's' : '') + ' without Auto Layout';
+
+        var alList = document.getElementById('al-list');
+        if (alData.length === 0) {
+          alList.innerHTML = '<div class="empty-state"><div class="big">&#10003;</div>All frames have Auto Layout!</div>';
+          document.getElementById('btn-apply-al-selected').disabled = true;
+          document.getElementById('btn-apply-al-all').disabled = true;
+        } else {
+          var alHtml = '<div class="select-all-row"><input type="checkbox" id="al-select-all"> Select all (' + alData.length + ')</div>';
+          alData.forEach(function(item, i) {
+            var dirTag = item.suggestedDirection === 'HORIZONTAL'
+              ? '<span class="tag h">H</span>'
+              : '<span class="tag v">V</span>';
+            alHtml += '<div class="item">' +
+              '<input type="checkbox" class="al-check" data-id="' + item.id + '">' +
+              dirTag +
+              '<span class="node-name clickable-name" data-node-id="' + escAttr(item.id) + '" title="' + escHtml(item.name) + '">' + escHtml(item.name) + '</span>' +
+              '<span style="color:var(--figma-color-text-secondary,#999);font-size:10px;flex-shrink:0;">(' + item.childCount + ')</span>' +
+              '<span class="node-path" title="' + escHtml(item.path) + '">' + escHtml(item.path) + '</span>' +
+              '</div>';
+          });
+          alList.innerHTML = alHtml;
+          document.getElementById('btn-apply-al-all').disabled = false;
+
+          // Use event delegation on the list (no duplicate listeners)
+          alList.onclick = function(e) {
+            // Checkbox changes
+            var target = e.target;
+            if (target.id === 'al-select-all') {
+              document.querySelectorAll('.al-check').forEach(function(cb) {
+                cb.checked = target.checked;
+                alCheckedIds[cb.dataset.id] = cb.checked;
+              });
+              var count = Object.keys(alCheckedIds).filter(function(k) { return alCheckedIds[k]; }).length;
+              document.getElementById('btn-apply-al-selected').disabled = count === 0;
+            } else if (target.classList.contains('al-check')) {
+              alCheckedIds[target.dataset.id] = target.checked;
+              var count2 = Object.keys(alCheckedIds).filter(function(k) { return alCheckedIds[k]; }).length;
+              document.getElementById('btn-apply-al-selected').disabled = count2 === 0;
+            }
+            // Click name to select
+            var nameEl = target.closest('.clickable-name');
+            if (nameEl && nameEl.dataset.nodeId) {
+              postMsg({ type: 'select-nodes', nodeIds: [nameEl.dataset.nodeId] });
+            }
+          };
+        }
+        break;
+      }
+
+      case 'apply-auto-layout-result': {
+        var alr = msg.data;
+        var alStatusEl = document.getElementById('al-status');
+        alStatusEl.className = 'status-bar success visible';
+        alStatusEl.textContent = 'Auto Layout applied to ' + alr.applied + ' frame' + (alr.applied !== 1 ? 's' : '') + '.' +
+          (alr.errors.length > 0 ? ' ' + alr.errors.length + ' error(s).' : '');
+        document.getElementById('btn-apply-al-selected').disabled = true;
+        document.getElementById('btn-apply-al-selected').textContent = 'Apply to Selected';
+        document.getElementById('btn-apply-al-all').disabled = true;
+        document.getElementById('btn-apply-al-all').textContent = 'Apply to All';
+        break;
+      }
+
+
+
+
+      // ── MCP Ready ──
+      case 'mcp-audit-result': {
+        document.getElementById('mcp-loading').className = 'status-bar';
+
+        // Handle error (e.g., no selection)
+        if (msg.error) {
+          document.getElementById('mcp-loading').className = 'status-bar error';
+          document.getElementById('mcp-loading').innerHTML = msg.error;
+          break;
+        }
+
+        mcpData = msg.data;
+        show('mcp-results');
+
+        var ms = mcpData.score;
+        var mcpCirc = 188.5;
+        var mcpOff = mcpCirc - (ms / 100) * mcpCirc;
+        var mcpArc = document.getElementById('mcp-score-arc');
+        mcpArc.style.strokeDashoffset = mcpOff;
+        mcpArc.style.stroke = scoreColor(ms);
+
+        document.getElementById('mcp-score-value').textContent = ms;
+        document.getElementById('mcp-score-value').style.color = scoreColor(ms);
+
+        // Plain language grade labels
+        var gradeText = ms >= 90 ? 'Excellent — AI will generate clean code' :
+                        ms >= 70 ? 'Good — minor issues, mostly clean code' :
+                        ms >= 50 ? 'Needs Work — AI will struggle with parts' :
+                                   'Critical — AI will generate messy code';
+        document.getElementById('mcp-score-grade').textContent = gradeText;
+        document.getElementById('mcp-score-grade').className = 'score-label ' + scoreGradeClass(ms);
+        var scopeLabel = mcpData.scope === 'selection' ? mcpData.scopeName : 'entire page';
+        document.getElementById('mcp-score-summary').textContent =
+          mcpData.totalIssues + ' issue' + (mcpData.totalIssues !== 1 ? 's' : '') + ' across 6 categories — ' + scopeLabel;
+
+        // Update stat card counts and deductions
+        var mcpCatKeys = ['naming', 'tokens', 'layout', 'structure', 'spacing', 'readability'];
+        for (var mci = 0; mci < mcpCatKeys.length; mci++) {
+          var mk = mcpCatKeys[mci];
+          var catData = mcpData[mk];
+          document.getElementById('mcp-count-' + mk).textContent = catData.issues.length;
+          setStatColor('mcp-count-' + mk, catData.issues.length);
+          var dedEl = document.getElementById('mcp-ded-' + mk);
+          if (catData.deduction > 0) {
+            dedEl.textContent = '-' + catData.deduction + ' / ' + catData.max;
+          } else {
+            dedEl.textContent = '';
+          }
+        }
+
+        var mcpDetail = document.getElementById('mcp-detail');
+        var mcpHtml = '';
+
+        var categories = [
+          { key: 'naming', label: 'Layer Naming', icon: 'Aa', weight: 25 },
+          { key: 'tokens', label: 'Token Binding', icon: '{}', weight: 25 },
+          { key: 'layout', label: 'Auto Layout', icon: '&#8644;', weight: 20 },
+          { key: 'structure', label: 'Component Structure', icon: '&#9671;', weight: 15 },
+          { key: 'spacing', label: 'Spacing Consistency', icon: '&#8942;', weight: 10 },
+          { key: 'readability', label: 'Semantic Readability', icon: '&#9673;', weight: 5 }
+        ];
+
+        for (var ci = 0; ci < categories.length; ci++) {
+          var cat = categories[ci];
+          var catObj = mcpData[cat.key];
+          var items = catObj.issues;
+          if (items.length === 0) continue;
+
+          var sev = catObj.deduction >= cat.weight * 0.6 ? 'critical' : 'warning';
+          mcpHtml += '<div class="mcp-category">';
+          mcpHtml += '<div class="mcp-category-header" data-cat="' + cat.key + '">';
+          mcpHtml += '<span class="mcp-cat-icon severity-' + sev + '">' + cat.icon + '</span>';
+
+          // Category label with percentage for stats-based categories
+          var catLabel = cat.label;
+          if (catObj.stats && catObj.stats.pct !== undefined) {
+            catLabel += ' (' + catObj.stats.pct + '%)';
+          }
+          mcpHtml += '<span class="mcp-cat-label">' + escHtml(catLabel) + '</span>';
+          mcpHtml += '<span class="mcp-cat-count severity-' + sev + '">' + items.length + '</span>';
+          mcpHtml += '<span class="mcp-select-all" data-cat-key="' + cat.key + '" title="Select all in Figma">&#9744;</span>';
+          mcpHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+          mcpHtml += '</div>';
+          mcpHtml += '<div class="mcp-category-body" id="mcp-body-' + cat.key + '">';
+
+          var showMax = Math.min(items.length, 30);
+          for (var ii = 0; ii < showMax; ii++) {
+            var item = items[ii];
+            var issueTitle = item.tooltip ? escAttr(item.tooltip) : '';
+            mcpHtml += '<div class="mcp-issue" data-node-id="' + escAttr(item.id) + '" title="' + issueTitle + '">';
+            mcpHtml += '<span class="mcp-issue-name" title="' + escAttr(item.name) + '">' + escHtml(item.name) + '</span>';
+            mcpHtml += '<span class="mcp-issue-msg">' + escHtml(item.message) + '</span>';
+            if (item.suggestion) {
+              mcpHtml += '<span class="mcp-issue-suggestion">&rarr; ' + escHtml(item.suggestion) + '</span>';
+            }
+            if (item.color) {
+              mcpHtml += '<span class="mcp-issue-color" style="background:' + escAttr(item.color) + ';"></span>';
+            }
+            mcpHtml += '</div>';
+          }
+
+          if (items.length > showMax) {
+            mcpHtml += '<div class="mcp-view-more" data-cat-expand="' + cat.key + '" data-expanded="false">Show ' + (items.length - showMax) + ' more...</div>';
+          }
+
+          mcpHtml += '</div></div>';
+        }
+
+        if (mcpData.totalIssues === 0) {
+          mcpHtml = '<div class="empty-state"><div class="big">&#10003;</div>Your design is AI-ready! MCP tools will generate clean code from this file.</div>';
+        }
+
+        mcpDetail.innerHTML = mcpHtml;
+
+        // Bind category collapse/expand
+        mcpDetail.querySelectorAll('.mcp-category-header').forEach(function(header) {
+          header.addEventListener('click', function(e) {
+            // Don't collapse when clicking select-all
+            if (e.target.classList.contains('mcp-select-all')) return;
+            var body = document.getElementById('mcp-body-' + header.dataset.cat);
+            var chevron = header.querySelector('.mcp-cat-chevron');
+            if (body.style.display === 'none') {
+              body.style.display = '';
+              chevron.innerHTML = '&#9660;';
+            } else {
+              body.style.display = 'none';
+              chevron.innerHTML = '&#9654;';
+            }
+          });
+        });
+
+        // Bind "Select All" per category
+        mcpDetail.querySelectorAll('.mcp-select-all').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var catKey = btn.dataset.catKey;
+            if (mcpData && mcpData[catKey]) {
+              var ids = mcpData[catKey].issues.map(function(n) { return n.id; }).filter(function(id) { return id !== ''; });
+              if (ids.length > 0) postMsg({ type: 'select-nodes', nodeIds: ids });
+            }
+          });
+        });
+
+        // Bind issue clicks to select nodes
+        mcpDetail.querySelectorAll('.mcp-issue[data-node-id]').forEach(function(issueEl) {
+          issueEl._bound = true;
+          issueEl.addEventListener('click', function() {
+            postMsg({ type: 'select-nodes', nodeIds: [issueEl.dataset.nodeId] });
+          });
+        });
+
+        // Bind "View More" expansion
+        mcpDetail.querySelectorAll('.mcp-view-more').forEach(function(moreEl) {
+          moreEl.addEventListener('click', function() {
+            var catKey = moreEl.dataset.catExpand;
+            var isExpanded = moreEl.dataset.expanded === 'true';
+            var body = document.getElementById('mcp-body-' + catKey);
+            if (!mcpData || !mcpData[catKey]) return;
+            var items = mcpData[catKey].issues;
+
+            if (!isExpanded) {
+              // Expand: render all remaining items
+              var extraHtml = '';
+              for (var xi = 30; xi < items.length; xi++) {
+                var xItem = items[xi];
+                var xTitle = xItem.tooltip ? escAttr(xItem.tooltip) : '';
+                extraHtml += '<div class="mcp-issue" data-node-id="' + escAttr(xItem.id) + '" title="' + xTitle + '">';
+                extraHtml += '<span class="mcp-issue-name" title="' + escAttr(xItem.name) + '">' + escHtml(xItem.name) + '</span>';
+                extraHtml += '<span class="mcp-issue-msg">' + escHtml(xItem.message) + '</span>';
+                if (xItem.suggestion) {
+                  extraHtml += '<span class="mcp-issue-suggestion">&rarr; ' + escHtml(xItem.suggestion) + '</span>';
+                }
+                if (xItem.color) {
+                  extraHtml += '<span class="mcp-issue-color" style="background:' + escAttr(xItem.color) + ';"></span>';
+                }
+                extraHtml += '</div>';
+              }
+              // Insert before the view-more element
+              var temp = document.createElement('div');
+              temp.innerHTML = extraHtml;
+              var frag = document.createDocumentFragment();
+              while (temp.firstChild) frag.appendChild(temp.firstChild);
+              body.insertBefore(frag, moreEl);
+              // Bind new issue clicks
+              body.querySelectorAll('.mcp-issue[data-node-id]').forEach(function(el) {
+                if (!el._bound) {
+                  el._bound = true;
+                  el.addEventListener('click', function() {
+                    postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+                  });
+                }
+              });
+              moreEl.textContent = 'Show less';
+              moreEl.dataset.expanded = 'true';
+              body.style.maxHeight = 'none';
+            } else {
+              // Collapse: remove extra items (keep first 30 + the view-more element)
+              var allIssues = body.querySelectorAll('.mcp-issue');
+              for (var ri = allIssues.length - 1; ri >= 30; ri--) {
+                allIssues[ri].remove();
+              }
+              moreEl.textContent = 'Show ' + (items.length - 30) + ' more...';
+              moreEl.dataset.expanded = 'false';
+              body.style.maxHeight = '';
+            }
+          });
+        });
+
+        // ── Render State Coverage section ──
+        var statesSection = document.getElementById('mcp-states-section');
+        var statesBody = document.getElementById('mcp-states-body');
+        var statesBadge = document.getElementById('mcp-states-badge');
+        if (mcpData.states && mcpData.states.length > 0) {
+          statesSection.style.display = '';
+          var totalMissing = 0;
+          for (var sti = 0; sti < mcpData.states.length; sti++) {
+            totalMissing += mcpData.states[sti].missingStates.length;
+          }
+          statesBadge.textContent = totalMissing > 0 ? totalMissing + ' missing' : mcpData.states.length + ' ok';
+          statesBadge.style.background = totalMissing > 0 ? '#f5a623' : '#14ae5c';
+
+          var stHtml = '';
+          for (var stj = 0; stj < mcpData.states.length; stj++) {
+            var stItem = mcpData.states[stj];
+            stHtml += '<div class="mcp-issue" data-node-id="' + escAttr(stItem.sampleNodeId) + '" style="flex-wrap:wrap;gap:4px;">';
+            stHtml += '<span class="mcp-issue-name">' + escHtml(stItem.componentName) + '</span>';
+            stHtml += '<span class="mcp-issue-msg">' + escHtml(stItem.componentType) + '</span>';
+            stHtml += '<div style="width:100%;display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;">';
+            for (var sk = 0; sk < stItem.existingStates.length; sk++) {
+              stHtml += '<span class="state-pill exists">' + escHtml(stItem.existingStates[sk]) + '</span>';
+            }
+            for (var sm = 0; sm < stItem.missingStates.length; sm++) {
+              stHtml += '<span class="state-pill missing">' + escHtml(stItem.missingStates[sm]) + '</span>';
+            }
+            stHtml += '</div></div>';
+          }
+          statesBody.innerHTML = stHtml;
+          statesBody.querySelectorAll('.mcp-issue[data-node-id]').forEach(function(el) {
+            el.addEventListener('click', function() {
+              postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+            });
+          });
+        } else {
+          statesSection.style.display = 'none';
+          statesBody.innerHTML = '';
+        }
+
+        // ── Render Screen Flow section ──
+        var flowSection = document.getElementById('mcp-flow-section');
+        var flowBody = document.getElementById('mcp-flow-body');
+        var flowBadge = document.getElementById('mcp-flow-badge');
+        if (mcpData.navigation && mcpData.navigation.screenCount > 0) {
+          flowSection.style.display = '';
+          flowBadge.textContent = mcpData.navigation.screenCount + ' screens';
+
+          var flowHtml = '';
+          if (mcpData.navigation.navType && mcpData.navigation.navType.length > 0) {
+            flowHtml += '<div style="margin-bottom:6px;">';
+            for (var nti = 0; nti < mcpData.navigation.navType.length; nti++) {
+              flowHtml += '<span class="state-pill exists">' + escHtml(mcpData.navigation.navType[nti]) + '</span> ';
+            }
+            flowHtml += '</div>';
+          }
+
+          // Group edges by source screen
+          var edgesByScreen = {};
+          for (var fei = 0; fei < mcpData.navigation.edges.length; fei++) {
+            var fedge = mcpData.navigation.edges[fei];
+            if (!edgesByScreen[fedge.sourceScreen]) edgesByScreen[fedge.sourceScreen] = { id: fedge.sourceScreenId, edges: [] };
+            edgesByScreen[fedge.sourceScreen].edges.push(fedge);
+          }
+
+          for (var fsi = 0; fsi < mcpData.navigation.screens.length; fsi++) {
+            var fscreen = mcpData.navigation.screens[fsi];
+            flowHtml += '<div class="flow-screen" data-node-id="' + escAttr(fscreen.id) + '">';
+            flowHtml += '<strong>' + escHtml(fscreen.name) + '</strong> <span style="font-size:10px;color:var(--figma-color-text-secondary,#999);">' + fscreen.width + 'x' + fscreen.height + '</span>';
+            var screenEdges = edgesByScreen[fscreen.name];
+            if (screenEdges) {
+              for (var fej = 0; fej < screenEdges.edges.length; fej++) {
+                var fe = screenEdges.edges[fej];
+                flowHtml += '<div class="flow-edge">&rarr; ' + escHtml(fe.destinationScreen) + ' <span style="font-size:10px;color:var(--figma-color-text-secondary,#999);">(' + escHtml(fe.triggerNode) + ', ' + escHtml(fe.triggerType) + ')</span></div>';
+              }
+            }
+            flowHtml += '</div>';
+          }
+          flowBody.innerHTML = flowHtml;
+          flowBody.querySelectorAll('.flow-screen[data-node-id]').forEach(function(el) {
+            el.addEventListener('click', function() {
+              postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+            });
+          });
+        } else {
+          flowSection.style.display = 'none';
+          flowBody.innerHTML = '';
+        }
+
+        // ── Render Assets section ──
+        var assetsSection = document.getElementById('mcp-assets-section');
+        var assetsBody = document.getElementById('mcp-assets-body');
+        var assetsBadge = document.getElementById('mcp-assets-badge');
+        if (mcpData.assets && mcpData.assets.totalAssets > 0) {
+          assetsSection.style.display = '';
+          assetsBadge.textContent = mcpData.assets.totalAssets;
+          assetsBadge.style.background = mcpData.assets.issues.length > 0 ? '#f5a623' : '#14ae5c';
+
+          var assHtml = '<div style="font-size:11px;margin-bottom:6px;color:var(--figma-color-text-secondary,#999);">' + mcpData.assets.imageCount + ' images, ' + mcpData.assets.iconCount + ' icons</div>';
+          for (var asi = 0; asi < mcpData.assets.issues.length; asi++) {
+            var aItem = mcpData.assets.issues[asi];
+            assHtml += '<div class="mcp-issue" data-node-id="' + escAttr(aItem.id) + '">';
+            assHtml += '<span class="mcp-issue-name">' + escHtml(aItem.name) + '</span>';
+            assHtml += '<span class="mcp-issue-msg">' + escHtml(aItem.message) + '</span>';
+            assHtml += '</div>';
+          }
+          if (mcpData.assets.issues.length === 0) {
+            assHtml += '<div style="font-size:11px;color:var(--figma-color-text-secondary,#999);font-style:italic;">No asset issues found.</div>';
+          }
+          assetsBody.innerHTML = assHtml;
+          assetsBody.querySelectorAll('.mcp-issue[data-node-id]').forEach(function(el) {
+            el.addEventListener('click', function() {
+              postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+            });
+          });
+        } else {
+          assetsSection.style.display = 'none';
+          assetsBody.innerHTML = '';
+        }
+
+        // Reset prompt button
+        var genBtn = document.getElementById('btn-mcp-generate-prompt');
+        genBtn.disabled = false;
+        genBtn.textContent = 'Generate AI Prompt';
+
+        break;
+      }
+
+      // ── MCP Prompt Result ──
+      case 'mcp-prompt-result': {
+        var genBtn2 = document.getElementById('btn-mcp-generate-prompt');
+        genBtn2.disabled = false;
+        genBtn2.textContent = 'Generate AI Prompt';
+
+        var quickBtn = document.getElementById('btn-quick-generate');
+        quickBtn.disabled = false;
+        quickBtn.textContent = 'Generate from Selection';
+
+        if (msg.error) {
+          var fixStatus2 = document.getElementById('mcp-fix-status');
+          fixStatus2.className = 'status-bar error visible';
+          fixStatus2.textContent = 'Prompt error: ' + msg.error;
+          break;
+        }
+
+        var pr = msg.data;
+        document.getElementById('mcp-prompt-text').textContent = pr.prompt;
+
+        var statsHtml = '';
+        var statItems = [];
+        if (pr.stats.screens > 0) statItems.push(pr.stats.screens + ' screens');
+        if (pr.stats.tokens > 0) statItems.push(pr.stats.tokens + ' tokens');
+        if (pr.stats.components > 0) statItems.push(pr.stats.components + ' components');
+        if (pr.stats.connections > 0) statItems.push(pr.stats.connections + ' nav connections');
+        if (pr.stats.assets > 0) statItems.push(pr.stats.assets + ' assets');
+        if (pr.stats.annotations > 0) statItems.push(pr.stats.annotations + ' annotations');
+        if (pr.stats.missingStates > 0) statItems.push(pr.stats.missingStates + ' missing states');
+        statsHtml = statItems.join(' &middot; ');
+        document.getElementById('mcp-prompt-stats').innerHTML = statsHtml;
+
+        hide('mcp-results');
+        hide('mcp-prompt-section');
+        hide('mcp-intents-section');
+        var overlay = document.getElementById('mcp-prompt-overlay');
+        overlay.style.display = '';
+        overlay.classList.add('active');
+        break;
+      }
+
+      // ── MCP Intents Detection Result ──
+      case 'mcp-intents-result': {
+        var detectBtn = document.getElementById('btn-mcp-auto-detect');
+        detectBtn.disabled = false;
+        detectBtn.textContent = 'Auto-Detect';
+        var intStatusEl = document.getElementById('mcp-intents-status');
+        intStatusEl.className = 'status-bar';
+
+        mcpIntentDetections = msg.data || [];
+        document.getElementById('mcp-intents-badge').textContent = mcpIntentDetections.length;
+
+        var intentList = document.getElementById('mcp-intents-list');
+        var summaryEl = document.getElementById('mcp-intents-summary');
+        var applyBtn2 = document.getElementById('btn-mcp-apply-intents');
+
+        if (mcpIntentDetections.length === 0) {
+          intentList.innerHTML = '<div style="font-size:11px;color:var(--figma-color-text-secondary,#999);font-style:italic;padding:10px;text-align:center;">No components detected. Name layers with keywords like button, input, card, list, etc.</div>';
+          applyBtn2.style.display = 'none';
+          summaryEl.style.display = 'none';
+          break;
+        }
+
+        // Show Apply All button and summary
+        applyBtn2.style.display = '';
+        applyBtn2.disabled = false;
+        applyBtn2.textContent = 'Apply All';
+
+        var intentOptions = ['View', 'Text', 'TextInput', 'Image', 'FlatList', 'ScrollView',
+          'TouchableOpacity', 'Pressable', 'Button', 'Switch', 'Modal',
+          'SafeAreaView', 'KeyboardAvoidingView', 'ActivityIndicator'];
+
+        // Summary by confidence
+        var highCount = 0, medCount = 0, lowCount = 0;
+        for (var ci2 = 0; ci2 < mcpIntentDetections.length; ci2++) {
+          if (mcpIntentDetections[ci2].confidence === 'high') highCount++;
+          else if (mcpIntentDetections[ci2].confidence === 'medium') medCount++;
+          else lowCount++;
+        }
+        var sumHtml = '<div class="intent-summary">';
+        sumHtml += '<span>' + mcpIntentDetections.length + ' found</span>';
+        if (highCount > 0) sumHtml += '<span><span class="confidence-dot" style="background:#14ae5c;"></span> ' + highCount + ' high</span>';
+        if (medCount > 0) sumHtml += '<span><span class="confidence-dot" style="background:#f5a623;"></span> ' + medCount + ' medium</span>';
+        if (lowCount > 0) sumHtml += '<span><span class="confidence-dot" style="background:#999;"></span> ' + lowCount + ' low</span>';
+        sumHtml += '</div>';
+        summaryEl.innerHTML = sumHtml;
+        summaryEl.style.display = '';
+
+        // Render list
+        var intHtml = '';
+        for (var di = 0; di < mcpIntentDetections.length; di++) {
+          var det = mcpIntentDetections[di];
+          var confColor = det.confidence === 'high' ? '#14ae5c' : det.confidence === 'medium' ? '#f5a623' : '#999';
+          var typeShort = det.type === 'COMPONENT' ? 'C' : det.type === 'COMPONENT_SET' ? 'CS' : det.type === 'INSTANCE' ? 'I' : 'F';
+          var typeBg = det.type === 'COMPONENT' ? '#0d99ff' : det.type === 'COMPONENT_SET' ? '#9747ff' : det.type === 'INSTANCE' ? '#14ae5c' : '#999';
+          intHtml += '<div class="intent-row" data-intent-idx="' + di + '">';
+          intHtml += '<span class="confidence-dot" style="background:' + confColor + ';" title="' + escAttr(det.confidence) + ' confidence"></span>';
+          intHtml += '<span class="intent-type-badge" style="background:' + typeBg + ';" title="' + escAttr(det.type) + '">' + typeShort + '</span>';
+          intHtml += '<div class="intent-name-cell" data-node-id="' + escAttr(det.id) + '">';
+          intHtml += '<div class="intent-node-name" title="' + escAttr(det.name) + '">' + escHtml(det.name) + '</div>';
+          if (det.path) {
+            intHtml += '<div class="intent-node-path" title="' + escAttr(det.path) + '">' + escHtml(det.path) + '</div>';
+          }
+          intHtml += '</div>';
+          intHtml += '<span class="intent-arrow">&rarr;</span>';
+          intHtml += '<select class="intent-select" data-node-id="' + escAttr(det.id) + '">';
+          intHtml += '<option value="">— select —</option>';
+          for (var oi = 0; oi < intentOptions.length; oi++) {
+            var sel2 = intentOptions[oi] === det.intent ? ' selected' : '';
+            intHtml += '<option value="' + escAttr(intentOptions[oi]) + '"' + sel2 + '>' + escHtml(intentOptions[oi]) + '</option>';
+          }
+          intHtml += '</select>';
+          intHtml += '</div>';
+        }
+        intentList.innerHTML = intHtml;
+
+        // Bind name clicks to select node in Figma
+        intentList.querySelectorAll('.intent-name-cell[data-node-id]').forEach(function(el) {
+          el.addEventListener('click', function() {
+            postMsg({ type: 'select-nodes', nodeIds: [el.dataset.nodeId] });
+          });
+        });
+
+        break;
+      }
+
+      // ── MCP Batch Intents Applied ──
+      case 'mcp-batch-intents-result': {
+        var applyBtn3 = document.getElementById('btn-mcp-apply-intents');
+        applyBtn3.disabled = false;
+        applyBtn3.textContent = 'Apply All';
+        var intStatusEl2 = document.getElementById('mcp-intents-status');
+
+        if (msg.error) {
+          intStatusEl2.className = 'status-bar error visible';
+          intStatusEl2.textContent = 'Error: ' + msg.error;
+          break;
+        }
+
+        var errCount = msg.data.errors ? msg.data.errors.length : 0;
+        intStatusEl2.className = 'status-bar success visible';
+        intStatusEl2.textContent = msg.data.applied + ' mapping(s) applied successfully.' + (errCount > 0 ? ' ' + errCount + ' failed.' : '');
+
+        // Mark applied rows visually
+        var appliedSelects = document.querySelectorAll('#mcp-intents-list .intent-select');
+        appliedSelects.forEach(function(sel3) {
+          if (sel3.value) {
+            var row = sel3.closest('.intent-row');
+            if (row) row.classList.add('applied');
+          }
+        });
+        break;
+      }
+
+      // ── MCP Selection Data for Responsive ──
+      case 'mcp-selection-data-result': {
+        var respInfo = document.getElementById('mcp-resp-node-info');
+        if (msg.error) {
+          respInfo.style.display = 'none';
+          mcpRespNodeId = null;
+          var fs5 = document.getElementById('mcp-fix-status');
+          fs5.className = 'status-bar error visible';
+          fs5.textContent = 'Select a node in Figma first.';
+          break;
+        }
+
+        var nd = msg.data;
+        mcpRespNodeId = nd.id;
+        document.getElementById('mcp-resp-node-name').textContent = nd.name + ' (' + nd.type + ')';
+        respInfo.style.display = '';
+
+        // Populate form with existing hints
+        document.getElementById('resp-scrollable').checked = !!(nd.hints && nd.hints.scrollable);
+        document.getElementById('resp-truncate').checked = !!(nd.hints && nd.hints.truncate);
+        document.getElementById('resp-fixed').checked = !!(nd.hints && nd.hints.fixed);
+        document.getElementById('resp-expandable').checked = !!(nd.hints && nd.hints.expandable);
+        document.getElementById('resp-platform').value = (nd.hints && nd.hints.platform) || '';
+        break;
+      }
+
+      // ── MCP Responsive Saved ──
+      case 'mcp-set-responsive-result': {
+        if (msg.data && msg.data.success) {
+          var fs6 = document.getElementById('mcp-fix-status');
+          fs6.className = 'status-bar success visible';
+          fs6.textContent = 'Responsive annotation saved.';
+          // Add or update in local list
+          if (mcpRespNodeId) {
+            var respName = document.getElementById('mcp-resp-node-name').textContent;
+            var respHints = {
+              scrollable: document.getElementById('resp-scrollable').checked,
+              truncate: document.getElementById('resp-truncate').checked,
+              fixed: document.getElementById('resp-fixed').checked,
+              expandable: document.getElementById('resp-expandable').checked,
+              platform: document.getElementById('resp-platform').value || null
+            };
+            var found = false;
+            for (var rai = 0; rai < mcpRespAnnotations.length; rai++) {
+              if (mcpRespAnnotations[rai].id === mcpRespNodeId) {
+                mcpRespAnnotations[rai].hints = respHints;
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              mcpRespAnnotations.push({ id: mcpRespNodeId, name: respName, hints: respHints });
+            }
+            renderRespAnnotations();
+          }
+        }
+        break;
+      }
+
+      // ── MCP Responsive Cleared ──
+      case 'mcp-clear-responsive-result': {
+        if (msg.data && msg.data.success) {
+          var fs7 = document.getElementById('mcp-fix-status');
+          fs7.className = 'status-bar success visible';
+          fs7.textContent = 'Responsive annotation cleared.';
+        }
+        // Remove from local list
+        var clearedId = msg.nodeId;
+        mcpRespAnnotations = mcpRespAnnotations.filter(function(a) { return a.id !== clearedId; });
+        renderRespAnnotations();
+        break;
+      }
+
+      // ── Cleanup ──
+      case 'cleanup-result': {
+        document.getElementById('cleanup-loading').className = 'status-bar';
+        if (msg.error) {
+          document.getElementById('cleanup-loading').className = 'status-bar error';
+          document.getElementById('cleanup-loading').innerHTML = 'Error: ' + msg.error;
+          break;
+        }
+        cleanupData = msg.data;
+        show('cleanup-results');
+
+        var cs = cleanupData.score;
+        var clCirc = 188.5;
+        var clOff = clCirc - (cs / 100) * clCirc;
+        var clArc = document.getElementById('cleanup-score-arc');
+        clArc.style.strokeDashoffset = clOff;
+        clArc.style.stroke = scoreColor(cs);
+
+        document.getElementById('cleanup-score-value').textContent = cs;
+        document.getElementById('cleanup-score-value').style.color = scoreColor(cs);
+        document.getElementById('cleanup-score-grade').textContent = scoreGrade(cs) + ' Cleanliness';
+        document.getElementById('cleanup-score-grade').className = 'score-label ' + scoreGradeClass(cs);
+
+        var clTotal = cleanupData.detached.length + cleanupData.unusedStyles.unusedStyles.length +
+          cleanupData.unusedStyles.unusedVariables.length + cleanupData.layers.totalIssues +
+          cleanupData.annotations.unannotatedCount;
+        document.getElementById('cleanup-score-summary').textContent = clTotal + ' issue' + (clTotal !== 1 ? 's' : '') + ' found across 5 categories';
+
+        document.getElementById('cl-count-detached').textContent = cleanupData.detached.length;
+        var unusedTotal = cleanupData.unusedStyles.unusedStyles.length + cleanupData.unusedStyles.unusedVariables.length;
+        document.getElementById('cl-count-unused').textContent = unusedTotal;
+        document.getElementById('cl-count-coverage').textContent = cleanupData.coverage.overallScore + '%';
+        document.getElementById('cl-count-layers').textContent = cleanupData.layers.totalIssues;
+        document.getElementById('cl-count-annotations').textContent = cleanupData.annotations.unannotatedCount;
+
+        setStatColor('cl-count-detached', cleanupData.detached.length);
+        setStatColor('cl-count-unused', unusedTotal);
+        document.getElementById('cl-count-coverage').className = 'count ' + (cleanupData.coverage.overallScore >= 70 ? 'ok' : 'warn');
+        setStatColor('cl-count-layers', cleanupData.layers.totalIssues);
+        setStatColor('cl-count-annotations', cleanupData.annotations.unannotatedCount);
+
+        var clHtml = '';
+
+        // Category 1: Detached Instances
+        if (cleanupData.detached.length > 0) {
+          clHtml += '<div class="mcp-category"><div class="mcp-category-header" data-cat="cl-detached">';
+          clHtml += '<span class="mcp-cat-icon severity-warning">&#128268;</span>';
+          clHtml += '<span class="mcp-cat-label">Detached Instances</span>';
+          clHtml += '<span class="mcp-cat-count severity-warning">' + cleanupData.detached.length + '</span>';
+          clHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+          clHtml += '</div><div class="mcp-category-body" id="mcp-body-cl-detached">';
+          var detMax = Math.min(cleanupData.detached.length, 20);
+          for (var di = 0; di < detMax; di++) {
+            var det = cleanupData.detached[di];
+            clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(det.id) + '">';
+            clHtml += '<span class="mcp-issue-name">' + escHtml(det.name) + '</span>';
+            clHtml += '<span class="mcp-issue-msg">' + (det.originalComponent ? 'was: ' + escHtml(det.originalComponent) : det.detachedType) + '</span>';
+            clHtml += '</div>';
+          }
+          clHtml += '</div></div>';
+        }
+
+        // Category 2: Unused Styles & Variables
+        if (unusedTotal > 0) {
+          clHtml += '<div class="mcp-category"><div class="mcp-category-header" data-cat="cl-unused">';
+          clHtml += '<span class="mcp-cat-icon severity-warning">&#128465;</span>';
+          clHtml += '<span class="mcp-cat-label">Unused Styles & Variables</span>';
+          clHtml += '<span class="mcp-cat-count severity-warning">' + unusedTotal + '</span>';
+          clHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+          clHtml += '</div><div class="mcp-category-body" id="mcp-body-cl-unused">';
+          var usMax = Math.min(cleanupData.unusedStyles.unusedStyles.length, 15);
+          for (var ui = 0; ui < usMax; ui++) {
+            var us = cleanupData.unusedStyles.unusedStyles[ui];
+            clHtml += '<div class="mcp-issue"><span class="mcp-issue-name">' + escHtml(us.name) + '</span>';
+            clHtml += '<span class="mcp-issue-msg">' + us.styleType + ' style</span></div>';
+          }
+          var uvMax = Math.min(cleanupData.unusedStyles.unusedVariables.length, 15);
+          for (var uvi = 0; uvi < uvMax; uvi++) {
+            var uv = cleanupData.unusedStyles.unusedVariables[uvi];
+            clHtml += '<div class="mcp-issue"><span class="mcp-issue-name">' + escHtml(uv.name) + '</span>';
+            clHtml += '<span class="mcp-issue-msg">' + uv.resolvedType + ' variable</span></div>';
+          }
+          clHtml += '<div class="cleanup-actions"><div class="btn-row">';
+          if (cleanupData.unusedStyles.unusedStyles.length > 0) {
+            clHtml += '<button class="btn btn-danger btn-sm" id="btn-delete-unused-styles">Delete ' + cleanupData.unusedStyles.unusedStyles.length + ' Unused Styles</button>';
+          }
+          if (cleanupData.unusedStyles.unusedVariables.length > 0) {
+            clHtml += '<button class="btn btn-danger btn-sm" id="btn-delete-unused-vars">Delete ' + cleanupData.unusedStyles.unusedVariables.length + ' Unused Variables</button>';
+          }
+          clHtml += '</div></div>';
+          clHtml += '</div></div>';
+        }
+
+        // Category 3: Design System Coverage
+        clHtml += '<div class="mcp-category"><div class="mcp-category-header" data-cat="cl-coverage">';
+        clHtml += '<span class="mcp-cat-icon ' + (cleanupData.coverage.overallScore >= 70 ? 'severity-pass' : 'severity-warning') + '">%</span>';
+        clHtml += '<span class="mcp-cat-label">Design System Coverage</span>';
+        clHtml += '<span class="mcp-cat-count">' + cleanupData.coverage.overallScore + '%</span>';
+        clHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+        clHtml += '</div><div class="export-section-body" id="mcp-body-cl-coverage">';
+        var covItems = [
+          { label: 'Component Instances', pct: cleanupData.coverage.componentCoverage.percentage, detail: cleanupData.coverage.componentCoverage.instances + ' instances / ' + cleanupData.coverage.componentCoverage.plainFrames + ' plain frames' },
+          { label: 'Fill Styles', pct: cleanupData.coverage.fillCoverage.percentage, detail: cleanupData.coverage.fillCoverage.styled + ' styled / ' + cleanupData.coverage.fillCoverage.hardcoded + ' hardcoded' },
+          { label: 'Text Styles', pct: cleanupData.coverage.textCoverage.percentage, detail: cleanupData.coverage.textCoverage.styled + ' styled / ' + cleanupData.coverage.textCoverage.hardcoded + ' hardcoded' },
+          { label: 'Variable Bindings', pct: cleanupData.coverage.variableCoverage.percentage, detail: cleanupData.coverage.variableCoverage.bound + ' bound / ' + cleanupData.coverage.variableCoverage.unbound + ' unbound' }
+        ];
+        for (var cvi = 0; cvi < covItems.length; cvi++) {
+          var cv = covItems[cvi];
+          var barColor = cv.pct >= 70 ? '#14ae5c' : (cv.pct >= 40 ? '#f5a623' : '#f24822');
+          clHtml += '<div class="progress-bar-container"><div class="progress-bar-label"><span>' + cv.label + '</span><span>' + cv.pct + '% &mdash; ' + cv.detail + '</span></div>';
+          clHtml += '<div class="progress-bar"><div class="progress-bar-fill" style="width:' + cv.pct + '%;background:' + barColor + ';"></div></div></div>';
+        }
+        clHtml += '</div></div>';
+
+        // Category 4: Layer Organization
+        if (cleanupData.layers.totalIssues > 0) {
+          clHtml += '<div class="mcp-category"><div class="mcp-category-header" data-cat="cl-layers">';
+          clHtml += '<span class="mcp-cat-icon severity-warning">&#128193;</span>';
+          clHtml += '<span class="mcp-cat-label">Layer Organization</span>';
+          clHtml += '<span class="mcp-cat-count severity-warning">' + cleanupData.layers.totalIssues + '</span>';
+          clHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+          clHtml += '</div><div class="mcp-category-body" id="mcp-body-cl-layers">';
+
+          if (cleanupData.layers.hiddenLayers.length > 0) {
+            clHtml += '<div style="padding:4px 12px;font-size:10px;font-weight:600;color:var(--figma-color-text-secondary,#999);">Hidden Layers (' + cleanupData.layers.hiddenLayers.length + ')</div>';
+            var hlMax = Math.min(cleanupData.layers.hiddenLayers.length, 10);
+            for (var hli = 0; hli < hlMax; hli++) {
+              var hl = cleanupData.layers.hiddenLayers[hli];
+              clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(hl.id) + '"><span class="mcp-issue-name">' + escHtml(hl.name) + '</span><span class="mcp-issue-msg">Hidden</span></div>';
+            }
+          }
+          if (cleanupData.layers.emptyGroups.length > 0) {
+            clHtml += '<div style="padding:4px 12px;font-size:10px;font-weight:600;color:var(--figma-color-text-secondary,#999);">Empty Groups (' + cleanupData.layers.emptyGroups.length + ')</div>';
+            var egMax = Math.min(cleanupData.layers.emptyGroups.length, 10);
+            for (var egi = 0; egi < egMax; egi++) {
+              var eg = cleanupData.layers.emptyGroups[egi];
+              clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(eg.id) + '"><span class="mcp-issue-name">' + escHtml(eg.name) + '</span><span class="mcp-issue-msg">Empty</span></div>';
+            }
+          }
+          if (cleanupData.layers.deepNesting.length > 0) {
+            clHtml += '<div style="padding:4px 12px;font-size:10px;font-weight:600;color:var(--figma-color-text-secondary,#999);">Deep Nesting (' + cleanupData.layers.deepNesting.length + ')</div>';
+            var dnMax = Math.min(cleanupData.layers.deepNesting.length, 10);
+            for (var dni = 0; dni < dnMax; dni++) {
+              var dn = cleanupData.layers.deepNesting[dni];
+              clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(dn.id) + '"><span class="mcp-issue-name">' + escHtml(dn.name) + '</span><span class="mcp-issue-msg">' + dn.depth + ' levels deep</span></div>';
+            }
+          }
+          if (cleanupData.layers.misordered.length > 0) {
+            clHtml += '<div style="padding:4px 12px;font-size:10px;font-weight:600;color:var(--figma-color-text-secondary,#999);">Misordered (' + cleanupData.layers.misordered.length + ')</div>';
+            var moMax = Math.min(cleanupData.layers.misordered.length, 10);
+            for (var moi = 0; moi < moMax; moi++) {
+              var mo = cleanupData.layers.misordered[moi];
+              clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(mo.id) + '"><span class="mcp-issue-name">' + escHtml(mo.name) + '</span><span class="mcp-issue-msg">' + escHtml(mo.issue) + '</span></div>';
+            }
+          }
+
+          clHtml += '<div class="cleanup-actions"><div class="btn-row">';
+          if (cleanupData.layers.hiddenLayers.length > 0) {
+            clHtml += '<button class="btn btn-danger btn-sm" id="btn-remove-hidden">Remove ' + cleanupData.layers.hiddenLayers.length + ' Hidden</button>';
+          }
+          if (cleanupData.layers.emptyGroups.length > 0) {
+            clHtml += '<button class="btn btn-danger btn-sm" id="btn-remove-empty">Remove ' + cleanupData.layers.emptyGroups.length + ' Empty</button>';
+          }
+          clHtml += '</div></div>';
+          clHtml += '</div></div>';
+        }
+
+        // Category 5: Handoff Annotations
+        if (cleanupData.annotations.unannotatedCount > 0) {
+          clHtml += '<div class="mcp-category"><div class="mcp-category-header" data-cat="cl-annotations">';
+          clHtml += '<span class="mcp-cat-icon severity-warning">&#128221;</span>';
+          clHtml += '<span class="mcp-cat-label">Missing Annotations</span>';
+          clHtml += '<span class="mcp-cat-count severity-warning">' + cleanupData.annotations.unannotatedCount + '</span>';
+          clHtml += '<span class="mcp-cat-chevron">&#9660;</span>';
+          clHtml += '</div><div class="mcp-category-body" id="mcp-body-cl-annotations">';
+          var annMax = Math.min(cleanupData.annotations.withoutAnnotations.length, 15);
+          for (var anni = 0; anni < annMax; anni++) {
+            var ann = cleanupData.annotations.withoutAnnotations[anni];
+            clHtml += '<div class="mcp-issue" data-node-id="' + escAttr(ann.id) + '"><span class="mcp-issue-name">' + escHtml(ann.name) + '</span><span class="mcp-issue-msg">No description or annotation</span></div>';
+          }
+          clHtml += '<div class="cleanup-actions"><div class="btn-row">';
+          clHtml += '<button class="btn btn-success btn-sm" id="btn-add-annotations">Add Auto-Annotations to ' + cleanupData.annotations.unannotatedCount + ' Components</button>';
+          clHtml += '</div></div>';
+          clHtml += '</div></div>';
+        }
+
+
+        if (clTotal === 0) {
+          clHtml = '<div class="empty-state"><div class="big">&#10003;</div>Your design is clean! No issues found.</div>';
+        }
+
+        document.getElementById('cleanup-detail').innerHTML = clHtml;
+
+        // Bind category collapse/expand
+        document.querySelectorAll('#cleanup-detail .mcp-category-header').forEach(function(header) {
+          header.addEventListener('click', function() {
+            var body = document.getElementById('mcp-body-' + header.dataset.cat);
+            var chevron = header.querySelector('.mcp-cat-chevron');
+            if (body.style.display === 'none') {
+              body.style.display = '';
+              chevron.innerHTML = '&#9660;';
+            } else {
+              body.style.display = 'none';
+              chevron.innerHTML = '&#9654;';
+            }
+          });
+        });
+
+        // Bind issue clicks
+        document.querySelectorAll('#cleanup-detail .mcp-issue[data-node-id]').forEach(function(issueEl) {
+          issueEl.addEventListener('click', function() {
+            postMsg({ type: 'select-nodes', nodeIds: [issueEl.dataset.nodeId] });
+          });
+        });
+
+        // Bind action buttons
+        var btnDelStyles = document.getElementById('btn-delete-unused-styles');
+        if (btnDelStyles) {
+          btnDelStyles.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('Delete ' + cleanupData.unusedStyles.unusedStyles.length + ' unused styles? This cannot be undone.')) return;
+            postMsg({ type: 'delete-unused-styles', styleIds: cleanupData.unusedStyles.unusedStyles.map(function(s) { return s.styleId; }) });
+            btnDelStyles.disabled = true;
+            btnDelStyles.textContent = 'Deleting...';
+          });
+        }
+        var btnDelVars = document.getElementById('btn-delete-unused-vars');
+        if (btnDelVars) {
+          btnDelVars.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('Delete ' + cleanupData.unusedStyles.unusedVariables.length + ' unused variables? This cannot be undone.')) return;
+            postMsg({ type: 'delete-unused-variables', variableIds: cleanupData.unusedStyles.unusedVariables.map(function(v) { return v.variableId; }) });
+            btnDelVars.disabled = true;
+            btnDelVars.textContent = 'Deleting...';
+          });
+        }
+        var btnRemoveHidden = document.getElementById('btn-remove-hidden');
+        if (btnRemoveHidden) {
+          btnRemoveHidden.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('Remove ' + cleanupData.layers.hiddenLayers.length + ' hidden layers? This cannot be undone.')) return;
+            postMsg({ type: 'remove-hidden-layers', nodeIds: cleanupData.layers.hiddenLayers.map(function(l) { return l.id; }) });
+            btnRemoveHidden.disabled = true;
+            btnRemoveHidden.textContent = 'Removing...';
+          });
+        }
+        var btnRemoveEmpty = document.getElementById('btn-remove-empty');
+        if (btnRemoveEmpty) {
+          btnRemoveEmpty.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('Remove ' + cleanupData.layers.emptyGroups.length + ' empty groups? This cannot be undone.')) return;
+            postMsg({ type: 'remove-empty-groups', nodeIds: cleanupData.layers.emptyGroups.map(function(g) { return g.id; }) });
+            btnRemoveEmpty.disabled = true;
+            btnRemoveEmpty.textContent = 'Removing...';
+          });
+        }
+        var btnAddAnnotations = document.getElementById('btn-add-annotations');
+        if (btnAddAnnotations) {
+          btnAddAnnotations.addEventListener('click', function(e) {
+            e.stopPropagation();
+            postMsg({ type: 'add-auto-annotations', nodeIds: cleanupData.annotations.withoutAnnotations.map(function(a) { return a.id; }) });
+            btnAddAnnotations.disabled = true;
+            btnAddAnnotations.textContent = 'Adding...';
+          });
+        }
+
+        break;
+      }
+
+      case 'delete-styles-result': {
+        var dsBtn = document.getElementById('btn-delete-unused-styles');
+        if (dsBtn) { dsBtn.textContent = 'Deleted ' + msg.data.deleted + ' styles'; }
+        break;
+      }
+
+      case 'delete-variables-result': {
+        var dvBtn = document.getElementById('btn-delete-unused-vars');
+        if (dvBtn) { dvBtn.textContent = 'Deleted ' + msg.data.deleted + ' variables'; }
+        break;
+      }
+
+      case 'remove-hidden-result': {
+        var rhBtn = document.getElementById('btn-remove-hidden');
+        if (rhBtn) { rhBtn.textContent = 'Removed ' + msg.data.removed + ' layers'; }
+        break;
+      }
+
+      case 'remove-empty-result': {
+        var reBtn = document.getElementById('btn-remove-empty');
+        if (reBtn) { reBtn.textContent = 'Removed ' + msg.data.removed + ' groups'; }
+        break;
+      }
+
+      case 'sort-layers-result': {
+        break;
+      }
+
+      case 'add-annotations-result': {
+        var aaBtn = document.getElementById('btn-add-annotations');
+        if (aaBtn) { aaBtn.textContent = 'Added ' + msg.data.annotated + ' annotations'; }
+        break;
+      }
+
+      case 'select-result': { break; }
+    }
+  };
+</script>
+</body>
+</html>
